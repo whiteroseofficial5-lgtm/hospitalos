@@ -1,0 +1,3352 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhiteRose HospitalOS - Demo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='22' fill='%230c2b3e'/%3E%3Ccircle cx='24' cy='22' r='7' fill='none' stroke='%23fff' stroke-width='2.5'/%3E%3C/svg%3E">
+<style>:root{
+  --navy:#0c2b3e; --navy2:#12384f; --green:#0f4a3f; --teal:#0f9b8e; --teal-d:#0b7a70; --teal-l:#e0f4f1;
+  --bg:#f4f6f8; --card:#fff; --line:#e3e8ee; --ink:#14232f; --mut:#617384;
+  --ok:#17803d; --okbg:#e3f5ea; --warn:#a36200; --warnbg:#fdf0d5; --bad:#b4283c; --badbg:#fbe5e8; --info:#1d5fa8; --infobg:#e2eefb;
+  --r:10px; --sh:0 1px 2px rgba(12,43,62,.06),0 4px 14px rgba(12,43,62,.04);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+h1,h2,h3,h4{margin:0;font-weight:650;letter-spacing:-.01em}
+h1{font-size:22px} h2{font-size:17px} h3{font-size:15px}
+a{color:var(--teal-d);text-decoration:none} a:hover{text-decoration:underline}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.hide{display:none!important}
+.mut{color:var(--mut)} .sm{font-size:12px} .b{font-weight:600} .r{text-align:right} .mono{font-variant-numeric:tabular-nums}
+
+/* login */
+#login{min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,520px);background:var(--card)}
+.login-art{background:linear-gradient(160deg,var(--navy) 0%,var(--green) 100%);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.login-art svg.bgrose{position:absolute;right:-90px;bottom:-90px;width:520px;opacity:.07}
+.login-art h1{font-size:40px;line-height:1.1;max-width:14em;margin-top:28px}
+.login-art p{max-width:30em;color:#bfe3de;font-size:16px}
+.login-art ul{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:10px;color:#d8efec}
+.login-art li:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--teal);margin-right:10px}
+.login-form{padding:56px 48px;display:flex;flex-direction:column;justify-content:center;gap:18px}
+.demo-chip{display:inline-block;background:var(--warnbg);color:var(--warn);border:1px solid #efd596;border-radius:999px;padding:3px 12px;font-size:12px;font-weight:700;letter-spacing:.04em}
+.rolegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rolebtn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 11px;text-align:left;cursor:pointer}
+.rolebtn:hover{border-color:var(--teal);background:var(--teal-l)}
+.rolebtn b{display:block;font-size:13px}.rolebtn span{font-size:12px;color:var(--mut)}
+@media(max-width:860px){#login{grid-template-columns:1fr}.login-art{padding:32px}.login-art h1{font-size:28px}.login-form{padding:28px 22px}}
+
+/* shell */
+#app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+#side{background:var(--navy);color:#cfe1e8;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column}
+.brand{padding:18px 18px 14px;display:flex;gap:10px;align-items:center;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand b{color:#fff;font-size:16px;display:block;line-height:1.1}.brand span{font-size:11px;color:#8fb4bf}
+#nav{padding:10px;display:grid;gap:2px;flex:1}
+#nav button{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;color:inherit;padding:9px 12px;border-radius:8px;cursor:pointer;text-align:left}
+#nav button:hover{background:rgba(255,255,255,.07)}
+#nav button.on{background:var(--teal);color:#fff;font-weight:600}
+#nav svg{width:18px;height:18px;flex:none}
+.side-foot{padding:12px 16px;font-size:11px;color:#7fa3af;border-top:1px solid rgba(255,255,255,.08)}
+#main{min-width:0;display:flex;flex-direction:column}
+#top{background:#fff;border-bottom:1px solid var(--line);padding:10px 24px;display:flex;gap:14px;align-items:center;position:sticky;top:0;z-index:5}
+#top .grow{flex:1}
+#menu{display:none;background:none;border:1px solid var(--line);border-radius:8px;padding:6px 9px;cursor:pointer}
+.search{display:flex;gap:6px;max-width:380px;width:100%}
+.user{display:flex;gap:10px;align-items:center}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+#view{padding:24px;max-width:1400px;width:100%}
+.demo-bar{background:var(--warnbg);color:var(--warn);font-size:12px;font-weight:600;text-align:center;padding:4px;border-bottom:1px solid #efd596}
+@media(max-width:900px){
+  #app{grid-template-columns:1fr}
+  #side{position:fixed;left:-260px;width:250px;z-index:30;transition:left .2s}
+  #side.open{left:0}
+  #menu{display:block} #view{padding:16px} #top{padding:10px 14px}
+  .user .who{display:none}
+}
+
+/* components */
+.head{display:flex;gap:12px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+.head p{margin:3px 0 0;color:var(--mut)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3,.g21{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){.g2,.g4{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+.card>.ch{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.card>.cb{padding:16px 18px}
+.kpi{padding:14px 16px;display:flex;flex-direction:column;gap:2px;cursor:pointer;border-left:4px solid var(--teal)}
+.kpi:hover{background:#fafcfc}
+.kpi .n{font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--navy)}
+.kpi .l{color:var(--mut);font-size:12.5px}
+.kpi.w{border-left-color:#e0a21a}.kpi.d{border-left-color:var(--bad)}.kpi.n2{border-left-color:var(--navy)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:550;white-space:nowrap}
+.btn:hover{border-color:#b9c6d1;background:#f8fafb}
+.btn.p{background:var(--teal);border-color:var(--teal);color:#fff}.btn.p:hover{background:var(--teal-d)}
+.btn.n{background:var(--navy);border-color:var(--navy);color:#fff}.btn.n:hover{background:var(--navy2)}
+.btn.d{color:var(--bad);border-color:#efc0c8}.btn.s{padding:4px 9px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{border:1px solid #cdd6df;border-radius:8px;padding:8px 10px;background:#fff;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--teal);outline:none;box-shadow:0 0 0 3px rgba(15,155,142,.15)}
+label{display:grid;gap:4px;font-size:12.5px;color:var(--mut);font-weight:550}
+textarea{min-height:72px;resize:vertical}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.form .full{grid-column:1/-1}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:12px;color:var(--mut);font-weight:600;padding:9px 12px;background:#f8fafb;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid #eef2f5;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr:hover{background:#fafcfc}
+.tw{overflow-x:auto}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;background:#eef2f5;color:#41576a;white-space:nowrap}
+.badge.ok{background:var(--okbg);color:var(--ok)}.badge.warn{background:var(--warnbg);color:var(--warn)}.badge.bad{background:var(--badbg);color:var(--bad)}.badge.info{background:var(--infobg);color:var(--info)}.badge.teal{background:var(--teal-l);color:var(--teal-d)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tabs button{background:none;border:0;padding:9px 14px;cursor:pointer;color:var(--mut);font-weight:600;border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--navy);border-bottom-color:var(--teal)}
+.empty{padding:36px 16px;text-align:center;color:var(--mut)}
+.empty b{display:block;color:var(--ink);margin-bottom:4px}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:13.5px}.kv dt{color:var(--mut)}.kv dd{margin:0}
+.bar{height:8px;background:#e8eef2;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--teal)}
+.bar.w i{background:#e0a21a}.bar.d i{background:var(--bad)}
+.note{background:var(--infobg);color:#16477f;border-radius:8px;padding:9px 12px;font-size:13px}
+.note.warn{background:var(--warnbg);color:var(--warn)}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px;cursor:pointer;font-size:12.5px}
+.pill.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* beds */
+.ward{margin-bottom:18px}
+.beds{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.bed{border:1.5px solid var(--line);border-radius:10px;padding:10px;background:#fff;font-size:12.5px;min-height:78px}
+.bed.free{border-color:#9ad8cf;background:#f1fbf9;cursor:pointer}.bed.free:hover{background:var(--teal-l)}
+.bed.occ{border-color:#f0b9c1;background:#fff7f8}.bed.mnt{background:#f3f4f6;color:var(--mut)}
+.bed b{display:block;font-size:13px}
+
+/* queue */
+.token{display:inline-grid;place-items:center;min-width:42px;height:34px;border-radius:8px;background:var(--navy);color:#fff;font-weight:700;padding:0 8px}
+
+/* charts */
+.chart{width:100%;height:190px}
+.chart text{font-size:10.5px;fill:#617384}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* modal + toast */
+#modal{position:fixed;inset:0;background:rgba(12,43,62,.5);display:grid;place-items:center;z-index:50;padding:16px}
+.dlg{background:#fff;border-radius:14px;width:min(760px,100%);max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.dlg.wide{width:min(980px,100%)}
+.dlg>.dh{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1}
+.dlg>.db{padding:20px}.dlg>.df{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+#toasts{position:fixed;right:16px;bottom:16px;display:grid;gap:8px;z-index:60}
+.toast{background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:340px}
+.toast.err{background:var(--bad)}.toast.ok{background:var(--green)}
+
+/* patient card + print docs */
+.idcard{width:340px;border-radius:16px;overflow:hidden;background:#fff;border:1px solid #cfd9e1;box-shadow:var(--sh);font-size:12.5px}
+.idcard .top{background:linear-gradient(120deg,var(--navy),var(--green));color:#fff;padding:12px 16px;display:flex;gap:10px;align-items:center}
+.idcard .top b{display:block;font-size:13.5px;line-height:1.15}.idcard .top span{font-size:11px;color:#a9d6cf}
+.idcard .mid{padding:14px 16px;display:flex;gap:14px;align-items:center}
+.idcard .qr{width:104px;height:104px;flex:none}.idcard .qr svg{width:100%;height:100%}
+.idcard .pid{font-size:17px;font-weight:700;color:var(--navy);letter-spacing:.02em}
+.idcard .foot{padding:8px 16px;background:#f4f6f8;color:var(--mut);font-size:11px;border-top:1px dashed #cfd9e1}
+.doc{background:#fff;padding:28px;color:#000;font-size:13px}
+.doc .dh2{display:flex;justify-content:space-between;gap:16px;border-bottom:2px solid var(--navy);padding-bottom:10px;margin-bottom:14px}
+.doc h2{font-size:19px;color:var(--navy)}
+.doc table{width:100%;border-collapse:collapse;margin:10px 0}.doc th,.doc td{border-bottom:1px solid #d9e0e6;padding:6px 8px;text-align:left}
+.doc .tot{margin-left:auto;width:260px}.doc .tot td{border:0;padding:3px 8px}
+.doc .sig{margin-top:44px;display:flex;justify-content:space-between;color:#555}
+.watermark{font-size:11px;color:#888;margin-top:18px;text-align:center}
+
+@media print{
+  body{background:#fff}
+  #side,#top,.demo-bar,#toasts,.noprint,.dlg>.dh,.dlg>.df{display:none!important}
+  #app{display:block} body:has(#modal) #app{display:none}
+  #modal{position:static;background:none;padding:0;display:block}
+  .dlg{box-shadow:none;max-height:none;width:100%}
+  .dlg>.db{padding:0}
+  .idcard{box-shadow:none}
+}
+</style></head>
+<body>
+<div id="login"></div><div id="app" class="hide"></div><div id="toasts" aria-live="polite"></div>
+<script>//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+</script>
+<script>/* ===== WhiteRose HospitalOS demo: data layer (browser, localStorage) ===== */
+const STORE_KEY = 'wr_hospitalos_demo_v1';
+const TODAY = (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
+const iso = d => { const z = new Date(d); z.setMinutes(z.getMinutes() - z.getTimezoneOffset()); return z.toISOString().slice(0,10); };
+const addDays = (n) => { const d = new Date(TODAY); d.setDate(d.getDate() + n); return iso(d); };
+const todayStr = () => iso(TODAY);
+
+/* deterministic random so every demo reset looks the same */
+let _s = 20260711;
+const rnd = () => (_s = (_s * 1664525 + 1013904223) % 4294967296) / 4294967296;
+const pick = a => a[Math.floor(rnd() * a.length)];
+const ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+
+const PREFIX = { hospital:'WR-HSP', patient:'WR-PAT', appointment:'WR-APT', admission:'WR-ADM', bill:'WR-INV', lab:'WR-LAB', rx:'WR-RX', staff:'WR-STF', inv:'WR-ITM', po:'WR-PO', visit:'WR-VIS', pay:'WR-PAY', sale:'WR-SAL' };
+/* counter based generator (a sequence per entity, never MAX+1) */
+function nextId(db, kind) {
+  db.seq[kind] = (db.seq[kind] || 0) + 1;
+  return PREFIX[kind] + '-' + String(db.seq[kind]).padStart(6, '0');
+}
+
+const ROLES = {
+  admin:{ label:'Hospital Administrator', short:'Administrator' },
+  reception:{ label:'Receptionist', short:'Reception' },
+  doctor:{ label:'Doctor', short:'Doctor' },
+  nurse:{ label:'Nurse', short:'Nurse' },
+  lab:{ label:'Laboratory Technician', short:'Lab' },
+  pharmacist:{ label:'Pharmacist', short:'Pharmacy' },
+  accountant:{ label:'Accountant', short:'Accounts' },
+  inventory:{ label:'Inventory Manager', short:'Inventory' },
+};
+const DEMO_USERS = [
+  { user:'admin',      role:'admin',      name:'Dr. Meera Kulkarni',   pass:'Admin@123' },
+  { user:'reception',  role:'reception',  name:'Pooja Shinde',         pass:'Reception@123' },
+  { user:'doctor',     role:'doctor',     name:'Dr. Arjun Deshmukh',   pass:'Doctor@123', doctorId:'D1' },
+  { user:'nurse',      role:'nurse',      name:'Sister Anita Fernandes', pass:'Nurse@123' },
+  { user:'lab',        role:'lab',        name:'Rohan Patil',          pass:'Lab@123' },
+  { user:'pharmacist', role:'pharmacist', name:'Kavita Joshi',         pass:'Pharma@123' },
+  { user:'accountant', role:'accountant', name:'Sanjay Mehta',         pass:'Accounts@123' },
+  { user:'inventory',  role:'inventory',  name:'Imran Sheikh',         pass:'Stores@123' },
+];
+
+function buildSeed() {
+  _s = 20260711;
+  const db = { v:1, seq:{}, audit:[], notifications:[] };
+  db.hospital = {
+    id: 'WR-HSP-000001', name:'WhiteRose Demo Multispeciality Hospital',
+    address:'Plot 12, Health City Road, Andheri East, Mumbai 400069', phone:'+91 22 5555 0100', email:'care@demo-hospital.example',
+    gstin:'27AAAAA0000A1Z5 (demo)', invoicePrefix:'WR-INV', invoiceNote:'This is a demo invoice. No real payment was taken.',
+  };
+  db.seq.hospital = 1;
+
+  db.departments = ['General Medicine','Cardiology','Orthopaedics','Paediatrics','Gynaecology','ENT','Dermatology','Neurology'].map((n,i)=>({ id:'DEP'+(i+1), name:n }));
+  const dn = n => db.departments.find(d=>d.name===n).id;
+
+  const docs = [
+    ['Dr. Arjun Deshmukh','General Medicine','MBBS, MD',500,'Mon-Sat'],
+    ['Dr. Neha Kapoor','Cardiology','MBBS, DM Cardiology',900,'Mon-Fri'],
+    ['Dr. Rahul Bhatt','Orthopaedics','MBBS, MS Ortho',800,'Mon-Sat'],
+    ['Dr. Sunita Rao','Paediatrics','MBBS, DCH',600,'Mon-Sat'],
+    ['Dr. Farah Siddiqui','Gynaecology','MBBS, MS OBG',700,'Mon-Sat'],
+    ['Dr. Vikram Nair','ENT','MBBS, MS ENT',600,'Tue-Sun'],
+    ['Dr. Isha Malhotra','Dermatology','MBBS, MD Derm',650,'Mon-Fri'],
+    ['Dr. Pranav Iyer','Neurology','MBBS, DM Neurology',1000,'Mon-Fri'],
+    ['Dr. Kiran Gokhale','General Medicine','MBBS, DNB',500,'Mon-Sat'],
+  ];
+  db.doctors = docs.map((d,i)=>({ id:'D'+(i+1), staffId:null, name:d[0], dept:dn(d[1]), qual:d[2], fee:d[3], days:d[4], slots:i%2?'10:00-16:00':'09:00-14:00', room:'OPD-'+(101+i), active:true }));
+
+  const staffRows = [
+    ['Dr. Meera Kulkarni','admin','Administration','Day'],['Pooja Shinde','reception','Front desk','Day'],['Ankita More','reception','Front desk','Evening'],
+    ['Sister Anita Fernandes','nurse','Nursing','Day'],['Sister Rekha Nair','nurse','Nursing','Night'],['Sister Joyce D\'Souza','nurse','Nursing','Evening'],['Brother Santosh Pawar','nurse','Nursing','Night'],
+    ['Rohan Patil','lab','Laboratory','Day'],['Deepa Kamat','lab','Laboratory','Evening'],
+    ['Kavita Joshi','pharmacist','Pharmacy','Day'],['Nilesh Gawade','pharmacist','Pharmacy','Evening'],
+    ['Sanjay Mehta','accountant','Accounts','Day'],['Priti Sawant','accountant','Accounts','Day'],
+    ['Imran Sheikh','inventory','Stores','Day'],['Ganesh Kale','inventory','Stores','Evening'],
+    ['Harish Yadav','nurse','Ward support','Night'],['Lata Bhosale','reception','Front desk','Night'],
+  ];
+  db.staff = staffRows.map((r,i)=>({ id:nextId(db,'staff'), name:r[0], role:r[1], dept:r[2], shift:r[3], phone:'98200'+String(10000+i*37).slice(-5), active:true }));
+  db.doctors.forEach((d,i)=>{ d.staffId = nextId(db,'staff'); db.staff.push({ id:d.staffId, name:d.name, role:'doctor', dept:db.departments.find(x=>x.id===d.dept).name, shift:'OPD', phone:'98190'+String(20000+i*53).slice(-5), active:true }); });
+
+  /* patients */
+  const fn = ['Aarav','Vihaan','Aditya','Rohit','Karan','Sahil','Manish','Suresh','Ramesh','Imran','Faisal','Nikhil','Omkar','Yash','Tushar','Anil','Dinesh','Prakash','Harsh','Jayesh'];
+  const fnf = ['Priya','Anjali','Sneha','Neha','Pooja','Riya','Kavya','Meena','Sunita','Lata','Fatima','Zoya','Shweta','Ritu','Komal','Asha','Divya','Swati','Mansi','Tanvi'];
+  const ln = ['Sharma','Patil','Desai','Jadhav','Khan','Shaikh','Gupta','Mehta','Nair','Iyer','Kulkarni','Pawar','More','Singh','Verma','Chavan','Joshi','Shetty','Dsouza','Menon'];
+  const allergies = ['None known','None known','None known','Penicillin','Sulfa drugs','Dust / pollen','Peanuts','None known'];
+  const hist = ['None','Hypertension','Type 2 diabetes','Asthma','Thyroid disorder','None','Migraine','Previous appendectomy','None'];
+  const areas = ['Andheri East','Powai','Goregaon','Malad','Kandivali','Borivali','Jogeshwari','Vile Parle','Bandra','Santacruz'];
+  db.patients = [];
+  for (let i=0;i<46;i++) {
+    const female = i%2===1; const age = ri(2,78);
+    const dob = new Date(TODAY); dob.setFullYear(dob.getFullYear()-age); dob.setDate(dob.getDate()-ri(0,300));
+    const name = (female?pick(fnf):pick(fn)) + ' ' + pick(ln);
+    db.patients.push({
+      id: nextId(db,'patient'), name, gender: female?'Female':'Male', dob: iso(dob),
+      phone: '9' + String(ri(100000000,999999999)), email:'', bloodGroup: pick(['A+','B+','O+','AB+','O-','A-','B-']),
+      address: ri(1,99)+', '+pick(areas)+', Mumbai', emergencyName: pick(fn)+' '+pick(ln), emergencyPhone:'9'+String(ri(100000000,999999999)),
+      allergies: pick(allergies), history: pick(hist), createdAt: addDays(-ri(1,200)), token: Math.random().toString(36).slice(2,10),
+    });
+  }
+
+  /* wards and beds */
+  const wardDef = [['General Ward A',8,1200,'Male'],['General Ward B',8,1200,'Female'],['Private Rooms',6,3500,'Any'],['ICU',4,7500,'Any'],['Maternity',4,2500,'Female']];
+  db.wards = []; db.beds = [];
+  wardDef.forEach((w,wi)=>{
+    const wid='W'+(wi+1); db.wards.push({ id:wid, name:w[0], rate:w[2], type:w[3] });
+    for (let b=1;b<=w[1];b++) db.beds.push({ id:wid+'-B'+b, ward:wid, label:(wi===2?'Room ':'Bed ')+b, status:'free', rate:w[2] });
+  });
+  db.beds.find(b=>b.id==='W1-B8').status='maintenance';
+
+  /* lab catalogue */
+  db.labTests = [
+    ['CBC','Complete blood count',350,'Hematology','Hb 13.0-17.0 g/dL; WBC 4000-11000'],['FBS','Fasting blood sugar',120,'Biochemistry','70-100 mg/dL'],['HBA1C','HbA1c',550,'Biochemistry','< 5.7 %'],
+    ['LIPID','Lipid profile',700,'Biochemistry','LDL < 100 mg/dL'],['LFT','Liver function test',800,'Biochemistry','ALT 7-56 U/L'],['KFT','Kidney function test',750,'Biochemistry','Creatinine 0.6-1.3 mg/dL'],
+    ['TSH','Thyroid stimulating hormone',450,'Hormones','0.4-4.0 mIU/L'],['UR','Urine routine',150,'Pathology','Clear, no protein'],['XRAY','Chest X-ray (report)',500,'Radiology','As per radiologist'],['ECG','Electrocardiogram',300,'Cardiology','Normal sinus rhythm'],
+  ].map(t=>({ code:t[0], name:t[1], price:t[2], dept:t[3], range:t[4] }));
+
+  /* pharmacy */
+  db.suppliers = [
+    { id:'S1', name:'MediSupply Distributors (demo)', phone:'022 5555 0111', type:'Medicine' },
+    { id:'S2', name:'CareLine Pharma Wholesale (demo)', phone:'022 5555 0122', type:'Medicine' },
+    { id:'S3', name:'SteriCore Hospital Supplies (demo)', phone:'022 5555 0133', type:'Supplies' },
+    { id:'S4', name:'BioMed Equipments (demo)', phone:'022 5555 0144', type:'Equipment' },
+  ];
+  const meds = [
+    ['Paracetamol 500 mg','Tablet',2.0,40,'Analgesic'],['Amoxicillin 500 mg','Capsule',9,40,'Antibiotic'],['Azithromycin 500 mg','Tablet',22,30,'Antibiotic'],['Metformin 500 mg','Tablet',3,60,'Antidiabetic'],
+    ['Amlodipine 5 mg','Tablet',4,50,'Antihypertensive'],['Atorvastatin 10 mg','Tablet',8,50,'Statin'],['Pantoprazole 40 mg','Tablet',7,40,'Antacid'],['Cetirizine 10 mg','Tablet',2.5,40,'Antihistamine'],
+    ['ORS sachet','Sachet',18,30,'Rehydration'],['Salbutamol inhaler','Inhaler',160,10,'Respiratory'],['Ibuprofen 400 mg','Tablet',3,40,'Analgesic'],['Vitamin D3 60K','Capsule',45,20,'Supplement'],
+    ['Diclofenac gel 30 g','Tube',85,10,'Topical'],['Normal saline 500 ml','Bottle',55,20,'IV fluid'],['Ondansetron 4 mg','Tablet',6,30,'Antiemetic'],
+  ];
+  db.medicines = meds.map((m,i)=>({ id:'M'+(i+1), name:m[0], form:m[1], price:m[2], reorder:m[3], category:m[4], supplier:i%2?'S2':'S1' }));
+  db.batches = [];
+  db.medicines.forEach((m,i)=>{
+    const lowCase = (i===3||i===9||i===13);
+    db.batches.push({ id:'B'+m.id+'A', med:m.id, batchNo:'WR'+(2400+i)+'A', expiry:addDays(lowCase? 400 : ri(200,700)), qty: lowCase? ri(4,14) : ri(60,200) });
+    if (i%3===0) db.batches.push({ id:'B'+m.id+'B', med:m.id, batchNo:'WR'+(2300+i)+'B', expiry:addDays(i===0?25:ri(40,120)), qty:ri(15,40) });
+  });
+  db.medicines[0].price=2; /* keep price stable */
+  db.sales=[]; db.tokens={};
+
+  /* inventory */
+  const inv = [
+    ['Surgical gloves (box 100)','Consumables','box',45,60,'S3'],['Disposable syringes 5 ml','Consumables','pcs',700,500,'S3'],['N95 masks','Consumables','pcs',120,150,'S3'],['Bandage roll','Consumables','pcs',220,100,'S3'],
+    ['IV cannula 20G','Consumables','pcs',90,120,'S3'],['Bed linen set','Linen','set',60,40,'S3'],['Wheelchair','Equipment','unit',8,3,'S4'],['Pulse oximeter','Equipment','unit',14,5,'S4'],
+    ['Oxygen cylinder (D type)','Equipment','unit',12,6,'S4'],['Infusion pump','Equipment','unit',9,4,'S4'],['Printer paper A4','Office','ream',18,10,'S3'],['Hand sanitizer 500 ml','Consumables','bottle',64,40,'S3'],
+  ];
+  db.items = inv.map(r=>({ id:nextId(db,'inv'), name:r[0], category:r[1], unit:r[2], qty:r[3], min:r[4], supplier:r[5] }));
+  db.stockMoves = db.items.slice(0,6).map(it=>({ id:'MV'+String(db.seq.mv=(db.seq.mv||0)+1).padStart(5,'0'), item:it.id, type:'in', qty:it.qty, dept:'', ref:'Opening stock', by:'System', at:addDays(-20) }));
+  db.pos = [{ id:nextId(db,'po'), supplier:'S3', status:'Received', at:addDays(-12), lines:[{ item:db.items[1].id, qty:500, cost:6 }], total:3000 }, { id:nextId(db,'po'), supplier:'S4', status:'Ordered', at:addDays(-3), lines:[{ item:db.items[7].id, qty:6, cost:1800 }], total:10800 }];
+
+  /* appointments + visits + invoices */
+  db.appointments=[]; db.visits=[]; db.prescriptions=[]; db.labOrders=[]; db.admissions=[]; db.invoices=[]; db.payments=[];
+  const slotList = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','14:00','14:30','15:00'];
+  const tokenCount = {};
+  const mkTok = (docId, date) => { const k=docId+date; tokenCount[k]=(tokenCount[k]||0)+1; return tokenCount[k]; };
+  const complaints = ['Fever and body ache for 3 days','Persistent cough','Chest discomfort on exertion','Knee pain','Routine antenatal check','Skin rash','Ear pain','Headache and dizziness','Child with cold and fever','High blood sugar review','Back pain','Follow-up visit'];
+  for (let i=0;i<26;i++) {
+    const p = db.patients[i%db.patients.length]; const doc = db.doctors[i%db.doctors.length];
+    const dayOff = i<9 ? 0 : (i<17 ? -ri(1,6) : ri(1,5));
+    const date = addDays(dayOff);
+    let status = dayOff<0 ? 'Completed' : dayOff>0 ? 'Booked' : pick(['Booked','Checked-in','Checked-in','In consultation','Completed','Booked','Completed']);
+    const a = { id:nextId(db,'appointment'), patient:p.id, doctor:doc.id, date, time:slotList[i%slotList.length], type:(i%5===0?'Walk-in':'Scheduled'), reason:complaints[i%complaints.length], status, token: status==='Booked'&&dayOff>0 ? null : mkTok(doc.id,date), visit:null, createdAt:addDays(Math.min(dayOff,0)-1) };
+    if (status==='Completed') {
+      const v = { id:nextId(db,'visit'), patient:p.id, doctor:doc.id, appt:a.id, date, symptoms:a.reason, vitals:{ bp:pick(['118/76','124/82','132/86','110/70']), pulse:ri(64,96), temp:pick([98.4,98.6,99.8,100.4]), spo2:ri(95,99), weight:ri(48,84) }, notes:'Examined. General condition stable.', diagnosis:pick(['Viral fever','Upper respiratory infection','Hypertension, stage 1','Mechanical back pain','Acute gastritis','Allergic rhinitis','Type 2 diabetes, review']), plan:'Medication as prescribed, adequate rest and fluids.', followUp:null };
+      a.visit=v.id; db.visits.push(v);
+      const rx = { id:nextId(db,'rx'), visit:v.id, patient:p.id, doctor:doc.id, date, status: dayOff<0?'Dispensed':'Pending', items:[ { med:'M1', dose:'1 tab', freq:'Twice daily', days:3, qty:6 }, { med:pick(['M8','M7','M2']), dose:'1', freq:'Once daily', days:5, qty:5 } ] };
+      db.prescriptions.push(rx);
+    }
+    db.appointments.push(a);
+  }
+  db.tokens = tokenCount;
+  /* lab orders in all states */
+  const states = ['Ordered','Sample collected','Processing','Resulted','Verified','Verified','Ordered','Resulted'];
+  db.visits.slice(0,8).forEach((v,i)=>{
+    const t = db.labTests[i%db.labTests.length]; const st = states[i];
+    const lo = { id:nextId(db,'lab'), patient:v.patient, doctor:v.doctor, visit:v.id, date:v.date, status:st, tests:[{ code:t.code, name:t.name, price:t.price, result: (st==='Resulted'||st==='Verified') ? sampleResult(t) : '', flag:(st==='Resulted'||st==='Verified') ? (i%3===0?'High':'Normal') : '' }], verifiedBy: st==='Verified' ? 'Rohan Patil' : '' };
+    db.labOrders.push(lo);
+  });
+  /* invoices (paid, partial, pending) */
+  const inv0 = [ 'Paid','Partial','Pending','Paid','Pending','Partial','Paid','Pending','Paid','Partial' ];
+  db.visits.slice(0,16).forEach((v,i)=>{
+    const d = db.doctors.find(x=>x.id===v.doctor);
+    const lines=[{ desc:'Consultation - '+d.name, cat:'Consultation', qty:1, price:d.fee }];
+    if (i%2===0) lines.push({ desc:'Lab: Complete blood count', cat:'Laboratory', qty:1, price:350 });
+    if (i%3===0) lines.push({ desc:'Pharmacy: Paracetamol 500 mg x 6', cat:'Pharmacy', qty:1, price:12 });
+    const total = lines.reduce((s,l)=>s+l.qty*l.price,0);
+    const invoice = { id:nextId(db,'bill'), patient:v.patient, visit:v.id, admission:null, date:v.date, lines, discount:0, total, paid:0, refunded:0, status:inv0[i%10], createdBy:'System' };
+    const paid = inv0[i%10]==='Paid' ? total : inv0[i%10]==='Partial' ? Math.round(total/2) : 0;
+    invoice.discount=0; if (paid) { invoice.paid = paid; db.payments.push({ id:nextId(db,'pay'), invoice:invoice.id, amount:paid, method:pick(['Cash','UPI','Card','Bank transfer']), at:v.date, ref:'SIM-'+ri(100000,999999), type:'payment' }); }
+    db.invoices.push(invoice);
+  });
+  /* some payments today for collections chart variety */
+  /* admissions */
+  const adm = [[20,'W1-B1','Pneumonia','D1',-4],[23,'W2-B1','Post-operative care','D3',-2],[27,'W3-B2','Chest pain observation','D2',-1],[30,'W4-B1','Post-stroke monitoring','D8',-3],[33,'W5-B1','Labour and delivery','D5',0]];
+  adm.forEach(a=>{
+    const p = db.patients[a[0]]; const bed = db.beds.find(b=>b.id===a[1]);
+    bed.status='occupied';
+    db.admissions.push({ id:nextId(db,'admission'), patient:p.id, doctor:a[3], bed:a[1], diagnosis:a[2], admittedAt:addDays(a[4]), status:'Admitted', history:[{ bed:a[1], from:addDays(a[4]), to:null }], dischargedAt:null, summary:'' });
+  });
+  /* one past discharge */
+  db.admissions.push({ id:nextId(db,'admission'), patient:db.patients[36].id, doctor:'D1', bed:'W1-B3', diagnosis:'Dengue fever', admittedAt:addDays(-9), status:'Discharged', history:[{ bed:'W1-B3', from:addDays(-9), to:addDays(-5) }], dischargedAt:addDays(-5), summary:'Platelets recovered. Discharged in stable condition with oral hydration advice.' });
+
+  db.audit.push({ at:new Date().toISOString(), user:'System', role:'system', action:'Demo data created', detail:'Fictional data loaded' });
+  return db;
+}
+function sampleResult(t){
+  const m = { CBC:'Hb 13.6 g/dL, WBC 7,400 /uL, Platelets 2.4 lakh', FBS:'96 mg/dL', HBA1C:'6.3 %', LIPID:'LDL 128 mg/dL, HDL 44 mg/dL', LFT:'ALT 32 U/L, AST 28 U/L', KFT:'Creatinine 0.9 mg/dL', TSH:'2.1 mIU/L', UR:'Clear, protein absent', XRAY:'No active lung lesion', ECG:'Normal sinus rhythm' };
+  return m[t.code]||'Within normal limits';
+}
+
+/* ===== core: state, permissions, helpers, shell ===== */
+let db = null, session = null, route = { m:'dashboard', p:{} };
+const $ = s => document.querySelector(s);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const money = n => '\u20B9' + (Math.round((n||0)*100)/100).toLocaleString('en-IN', { minimumFractionDigits:0, maximumFractionDigits:2 });
+const fdate = s => { if (!s) return '-'; const d = new Date(s.length<=10 ? s+'T00:00:00' : s); return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }); };
+const age = dob => { const d = new Date(dob), n = new Date(); let a = n.getFullYear()-d.getFullYear(); if (n < new Date(n.getFullYear(), d.getMonth(), d.getDate())) a--; return a; };
+const sum = (a, f) => a.reduce((s, x) => s + f(x), 0);
+const byId = (arr, id) => arr.find(x => x.id === id);
+const P = id => byId(db.patients, id) || { name:'Unknown', id };
+const DOC = id => byId(db.doctors, id) || { name:'Unknown' };
+const deptName = id => (byId(db.departments, id) || {}).name || '';
+const BED = id => byId(db.beds, id) || { id, label:id, ward:'' };
+const bedName = id => { const b = BED(id); const w = byId(db.wards, b.ward); return (w ? w.name + ' / ' : '') + b.label; };
+const sc = { Paid:'ok', Verified:'ok', Completed:'ok', Dispensed:'ok', Discharged:'ok', Received:'ok', free:'ok', Partial:'warn', Processing:'warn', 'Sample collected':'warn', 'Checked-in':'info', 'In consultation':'info', Resulted:'info', Ordered:'info', Booked:'teal', Admitted:'teal', Pending:'bad', occupied:'bad', Cancelled:'bad', maintenance:'', Refunded:'warn' };
+const badge = s => `<span class="badge ${sc[s] || ''}">${esc(s)}</span>`;
+class VErr extends Error { constructor(m){ super(m); this.name = 'ValidationError'; } }
+
+function load() { try { const s = localStorage.getItem(STORE_KEY); if (s) { const d = JSON.parse(s); if (d && d.v === 1) return d; } } catch (e) {} return buildSeed(); }
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); } catch (e) {} }
+function audit(action, detail) { db.audit.unshift({ at:new Date().toISOString(), user:session ? session.name : 'System', role:session ? session.role : 'system', action, detail:detail || '' }); if (db.audit.length > 400) db.audit.length = 400; }
+
+/* ---- permissions: one central guard used by every action ---- */
+const MODS = [
+  { id:'dashboard',    label:'Dashboard',        roles:'*', icon:'M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10' },
+  { id:'patients',     label:'Patients',         roles:['admin','reception','doctor','nurse'], icon:'M16 11a4 4 0 10-8 0 4 4 0 008 0zM4 21c0-4 4-6 8-6s8 2 8 6' },
+  { id:'appointments', label:'Appointments',     roles:['admin','reception','doctor','nurse'], icon:'M7 3v4M17 3v4M4 9h16M5 5h14a1 1 0 011 1v14H4V6a1 1 0 011-1z' },
+  { id:'opd',          label:'OPD and consultations', roles:['admin','doctor','nurse'], icon:'M12 3v18M3 12h18' },
+  { id:'ipd',          label:'IPD and beds',     roles:['admin','reception','doctor','nurse'], icon:'M3 18v-8h18v8M3 14h18M6 10V7h5v3' },
+  { id:'lab',          label:'Laboratory',       roles:['admin','doctor','lab'], icon:'M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3' },
+  { id:'pharmacy',     label:'Pharmacy',         roles:['admin','pharmacist'], icon:'M8 8l8 8M5 11a4 4 0 010-6l1-1a4 4 0 016 0l7 7a4 4 0 010 6l-1 1a4 4 0 01-6 0z' },
+  { id:'inventory',    label:'Inventory',        roles:['admin','inventory'], icon:'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10' },
+  { id:'billing',      label:'Billing',          roles:['admin','accountant','reception'], icon:'M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2zM9 8h6M9 12h6' },
+  { id:'reports',      label:'Reports',          roles:['admin','accountant'], icon:'M4 20V10M10 20V4M16 20v-7M22 20H2' },
+  { id:'staff',        label:'Doctors and staff', roles:['admin'], icon:'M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z' },
+  { id:'audit',        label:'Audit log',        roles:['admin'], icon:'M6 3h9l3 3v15H6zM9 11h6M9 15h6' },
+];
+const PERM = {
+  'patient.create':['admin','reception'], 'appt.book':['admin','reception'], 'appt.checkin':['admin','reception','nurse'], 'appt.cancel':['admin','reception'],
+  'vitals':['admin','doctor','nurse'], 'consult':['admin','doctor'], 'lab.order':['admin','doctor'], 'lab.process':['admin','lab'], 'lab.verify':['admin','lab'],
+  'rx.dispense':['admin','pharmacist'], 'pharm.stock':['admin','pharmacist'], 'inv.manage':['admin','inventory'],
+  'bill.create':['admin','accountant','reception'], 'bill.pay':['admin','accountant','reception'], 'bill.refund':['admin','accountant'],
+  'ipd.admit':['admin','reception','doctor'], 'ipd.transfer':['admin','doctor','nurse'], 'ipd.discharge':['admin','doctor'], 'staff.manage':['admin'], 'demo.reset':['admin'],
+};
+const canMod = id => { const m = MODS.find(x => x.id === id); return !!session && !!m && (m.roles === '*' || m.roles.includes(session.role)); };
+const can = a => !!session && (PERM[a] || []).includes(session.role);
+function need(a) { if (!can(a)) { audit('Access denied', a); toast('Your role (' + ROLES[session.role].short + ') is not allowed to do this.', 'err'); throw new VErr('forbidden'); } }
+function needMod(m) { if (!canMod(m)) { toast('Your role is not allowed to open this module.', 'err'); throw new VErr('forbidden'); } }
+
+/* ---- action registry: every handler runs through one wrapper ---- */
+const A = {};
+function def(name, fn) { A[name] = (...args) => { try { fn(...args); } catch (e) { if (e.name === 'ValidationError') { if (e.message !== 'forbidden') toast(e.message, 'err'); } else { console.error(e); toast('Something went wrong: ' + e.message, 'err'); } } }; }
+
+/* ---- ui helpers ---- */
+function toast(msg, kind) { const t = document.createElement('div'); t.className = 'toast ' + (kind || ''); t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), kind === 'err' ? 5200 : 3200); }
+function openModal(o) {
+  closeModal();
+  const m = document.createElement('div'); m.id = 'modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+  m.innerHTML = `<div class="dlg ${o.wide ? 'wide' : ''}"><div class="dh"><h2>${esc(o.title)}</h2><button class="btn s" onclick="closeModal()" aria-label="Close">Close</button></div><div class="db">${o.body}</div>${o.footer ? `<div class="df">${o.footer}</div>` : ''}</div>`;
+  m.addEventListener('mousedown', e => { if (e.target === m) closeModal(); });
+  document.body.appendChild(m);
+  const f = m.querySelector('input,select,textarea'); if (f && !o.noFocus) f.focus();
+}
+function closeModal() { const m = $('#modal'); if (m) m.remove(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+const fv = id => { const out = {}; const root = document.getElementById(id); if (!root) return out; root.querySelectorAll('[name]').forEach(el => { if (el.type === 'checkbox') { (out[el.name] = out[el.name] || []); if (el.checked) out[el.name].push(el.value); } else out[el.name] = el.value.trim(); }); return out; };
+const opt = (arr, val, label, sel) => arr.map(x => `<option value="${esc(val(x))}" ${sel === val(x) ? 'selected' : ''}>${esc(label(x))}</option>`).join('');
+const field = (label, inner, cls) => `<label class="${cls || ''}">${esc(label)}${inner}</label>`;
+const empty = (t, s) => `<div class="empty"><b>${esc(t)}</b>${esc(s || '')}</div>`;
+const table = (cols, rows, emptyT, emptyS) => rows.length ? `<div class="tw"><table class="tbl"><thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : empty(emptyT || 'Nothing here yet', emptyS);
+const pLink = id => `<a href="#" onclick="A.openPatient('${id}');return false">${esc(P(id).name)}</a><div class="sm mut mono">${esc(id)}</div>`;
+function tabs(list, cur, fn) { return `<div class="tabs" role="tablist">${list.map(t => `<button role="tab" class="${cur === t[0] ? 'on' : ''}" onclick="${fn}('${t[0]}')">${esc(t[1])}</button>`).join('')}</div>`; }
+function patientOptions(sel) { return `<option value="">Select patient</option>` + opt(db.patients, p => p.id, p => p.id + '  ' + p.name, sel); }
+
+/* ---- qr + csv + print ---- */
+function qrSvg(text) { const q = qrcode(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({ scalable:true, margin:0, cellSize:4 }); }
+const patientQR = p => 'WR://patient/' + p.id + '?k=' + p.token;
+function downloadCSV(name, cols, rows) {
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const csv = [cols, ...rows].map(r => r.map(q).join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type:'text/csv' })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+const docHead = t => `<div class="dh2"><div><h2>${esc(db.hospital.name)}</h2><div class="sm">${esc(db.hospital.address)}<br>${esc(db.hospital.phone)} | ${esc(db.hospital.id)}</div></div><div class="r"><b style="font-size:16px">${esc(t)}</b><div class="sm">Printed ${fdate(todayStr())}</div><div class="sm" style="color:#a36200">DEMO DOCUMENT</div></div></div>`;
+const docFoot = `<div class="watermark">Generated by WhiteRose HospitalOS (demo). All data is fictional. Software by WhiteRose - Cybersecurity and Software Development.</div>`;
+function showDoc(title, html, wide) { openModal({ title, wide:wide !== false, noFocus:true, body:`<div class="doc">${html}${docFoot}</div>`, footer:`<button class="btn p" onclick="window.print()">Print / Save as PDF</button><button class="btn" onclick="closeModal()">Close</button>` }); }
+
+/* ---- charts (inline svg, no libraries) ---- */
+function barChart(data, o) {
+  o = o || {}; const w = 520, h = 190, pl = 34, pb = 26, pt = 10; const max = Math.max(1, ...data.map(d => d.v)); const bw = (w - pl) / data.length;
+  const ticks = [0, .5, 1].map(f => { const y = pt + (h - pb - pt) * (1 - f); return `<line x1="${pl}" x2="${w}" y1="${y}" y2="${y}" stroke="#e3e8ee"/><text x="${pl - 5}" y="${y + 3}" text-anchor="end">${o.fmt ? o.fmt(max * f) : Math.round(max * f)}</text>`; }).join('');
+  const bars = data.map((d, i) => { const bh = (h - pb - pt) * d.v / max; const x = pl + i * bw + bw * .2; return `<rect x="${x}" y="${h - pb - bh}" width="${bw * .6}" height="${bh}" rx="3" fill="${d.c || o.color || '#0f9b8e'}"><title>${esc(d.l)}: ${o.fmt ? o.fmt(d.v) : d.v}</title></rect><text x="${x + bw * .3}" y="${h - 9}" text-anchor="middle">${esc(d.l)}</text>`; }).join('');
+  return `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(o.label || 'chart')}">${ticks}${bars}</svg>`;
+}
+function lineChart(series, labels, o) {
+  o = o || {}; const w = 520, h = 190, pl = 40, pb = 26, pt = 10; const max = Math.max(1, ...series.flatMap(s => s.v)); const step = (w - pl - 10) / Math.max(1, labels.length - 1);
+  const ticks = [0, .5, 1].map(f => { const y = pt + (h - pb - pt) * (1 - f); return `<line x1="${pl}" x2="${w}" y1="${y}" y2="${y}" stroke="#e3e8ee"/><text x="${pl - 5}" y="${y + 3}" text-anchor="end">${o.fmt ? o.fmt(max * f) : Math.round(max * f)}</text>`; }).join('');
+  const lines = series.map(s => { const pts = s.v.map((v, i) => [pl + i * step, pt + (h - pb - pt) * (1 - v / max)]); return `<polyline fill="none" stroke="${s.c}" stroke-width="2.5" points="${pts.map(p => p.join(',')).join(' ')}"/>` + pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${s.c}"><title>${esc(labels[i])}: ${o.fmt ? o.fmt(s.v[i]) : s.v[i]}</title></circle>`).join(''); }).join('');
+  const xl = labels.map((l, i) => `<text x="${pl + i * step}" y="${h - 9}" text-anchor="middle">${esc(l)}</text>`).join('');
+  return `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(o.label || 'chart')}">${ticks}${lines}${xl}</svg>`;
+}
+
+/* ---- derived numbers shared by dashboard / reports ---- */
+const net = i => i.total - (i.discount || 0);
+const balance = i => Math.max(0, net(i) - i.paid + i.refunded);
+function refreshInvoice(i) { const b = balance(i); const received = i.paid - i.refunded; i.status = net(i) > 0 && b <= 0 ? 'Paid' : received > 0 ? 'Partial' : 'Pending'; }
+const medStock = id => sum(db.batches.filter(b => b.med === id && b.expiry >= todayStr()), b => b.qty);
+const lowMeds = () => db.medicines.filter(m => medStock(m.id) <= m.reorder);
+const expiring = days => db.batches.filter(b => b.qty > 0 && b.expiry <= addDays(days));
+const collectionsOn = d => sum(db.payments.filter(p => p.at === d), p => p.type === 'refund' ? -p.amount : p.amount);
+const activeAdm = () => db.admissions.filter(a => a.status === 'Admitted');
+function alerts() {
+  const a = [];
+  lowMeds().forEach(m => a.push({ k:'warn', t:'Low stock: ' + m.name + ' (' + medStock(m.id) + ' left, reorder at ' + m.reorder + ')', go:'pharmacy' }));
+  expiring(30).forEach(b => a.push({ k:'bad', t:(b.expiry < todayStr() ? 'Expired' : 'Expires soon') + ': ' + byId(db.medicines, b.med).name + ' batch ' + b.batchNo + ' (' + fdate(b.expiry) + ')', go:'pharmacy' }));
+  db.items.filter(i => i.qty <= i.min).forEach(i => a.push({ k:'warn', t:'Supply below minimum: ' + i.name + ' (' + i.qty + ' ' + i.unit + ')', go:'inventory' }));
+  const pl = db.labOrders.filter(l => l.status !== 'Verified').length; if (pl) a.push({ k:'info', t:pl + ' laboratory orders are not verified yet', go:'lab' });
+  return a;
+}
+
+/* ---- shell ---- */
+const icon = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+const roseSvg = (s, c) => `<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none" stroke="${c || '#fff'}" stroke-width="2" aria-hidden="true"><circle cx="24" cy="24" r="21" stroke-dasharray="3 2.4"/><path d="M24 15c-4 0-7 3-7 6.5 0 4 3 7 7 7s7-3 7-7c0-3-2-5-5-5-2.5 0-4.2 1.7-4.2 3.8 0 1.8 1.4 3 3 3"/><path d="M24 28.5V37M24 33c-2.5-1-4.5-.5-6 1M24 31c2.5-1 4.5-.5 6 1"/></svg>`;
+
+function renderLogin() {
+  $('#app').classList.add('hide'); $('#login').classList.remove('hide');
+  $('#login').innerHTML = `
+  <section class="login-art">
+    ${roseSvg(520, '#fff').replace('<svg', '<svg class="bgrose"')}
+    <div><div class="row">${roseSvg(34)}<b style="font-size:17px">WhiteRose</b><span class="mut" style="color:#8fb4bf">Cybersecurity and Software Development</span></div>
+    <h1>Run the whole hospital from one screen.</h1>
+    <p>Registration, OPD, wards and beds, laboratory, pharmacy, stores and billing. Every module is connected, so one patient ID follows the patient everywhere.</p>
+    <ul><li>Unique patient IDs with a QR card</li><li>Eight roles, each with its own view</li><li>Bed allocation that prevents double booking</li><li>Itemised invoices with partial payments</li></ul></div>
+    <div class="sm" style="color:#8fb4bf">WhiteRose Demo Multispeciality Hospital is fictional. Every record in this demo is made up.</div>
+  </section>
+  <section class="login-form">
+    <div><span class="demo-chip">DEMO ENVIRONMENT</span></div>
+    <div><h1>Sign in to HospitalOS</h1><p class="mut" style="margin:6px 0 0">Use a demo account below. Click any role to fill the form.</p></div>
+    <form id="lf" onsubmit="A.login();return false" class="grid" style="gap:12px">
+      ${field('Username', '<input name="user" autocomplete="username" required>')}
+      ${field('Password', '<input name="pass" type="password" autocomplete="current-password" required>')}
+      <div id="lerr" class="note warn hide"></div>
+      <button class="btn p" style="justify-content:center;padding:10px">Sign in</button>
+    </form>
+    <div><div class="sm mut" style="margin-bottom:8px">Demo accounts (development only)</div>
+    <div class="rolegrid">${DEMO_USERS.map(u => `<button class="rolebtn" onclick="A.fillLogin('${u.user}')"><b>${esc(ROLES[u.role].label)}</b><span>${esc(u.user)} / ${esc(u.pass)}</span></button>`).join('')}</div></div>
+  </section>`;
+}
+def('fillLogin', u => { const d = DEMO_USERS.find(x => x.user === u); const f = $('#lf'); f.querySelector('[name=user]').value = d.user; const pw = f.querySelector('[name=pass]'); pw.value = d.pass; pw.focus(); });
+def('login', () => {
+  const f = fv('lf'); const u = DEMO_USERS.find(x => x.user === f.user.toLowerCase() && x.pass === f.pass);
+  if (!u) { const e = $('#lerr'); e.textContent = 'Username or password is not correct. Pick a demo account below to fill it in.'; e.classList.remove('hide'); return; }
+  startSession(u); 
+});
+function startSession(u) {
+  session = { user:u.user, role:u.role, name:u.name, doctorId:u.doctorId || null };
+  try { sessionStorage.setItem('wr_sess', u.user); } catch (e) {}
+  audit('Signed in', ROLES[u.role].label); save();
+  route = { m:'dashboard', p:{} }; renderShell();
+}
+def('logout', () => { audit('Signed out'); save(); session = null; try { sessionStorage.removeItem('wr_sess'); } catch (e) {} renderLogin(); });
+def('switchUser', u => { const d = DEMO_USERS.find(x => x.user === u); if (d) { audit('Switched demo user', d.role); startSession(d); toast('Now signed in as ' + ROLES[d.role].label, 'ok'); } });
+
+function renderShell() {
+  $('#login').classList.add('hide'); $('#app').classList.remove('hide');
+  const nav = MODS.filter(m => canMod(m.id)).map(m => `<button data-m="${m.id}" onclick="A.go('${m.id}')">${icon(m.icon)}<span>${esc(m.label)}</span></button>`).join('');
+  $('#app').innerHTML = `
+  <aside id="side"><div class="brand">${roseSvg(32)}<div><b>WhiteRose HospitalOS</b><span>Cybersecurity and Software</span></div></div>
+    <nav id="nav" aria-label="Main">${nav}</nav>
+    <div class="side-foot"><button class="btn s" style="width:100%;justify-content:center" onclick="A.script()">Demo walkthrough</button><div style="margin-top:8px">${esc(db.hospital.id)}<br>Demo data resets on request</div></div></aside>
+  <div id="main"><div class="demo-bar">DEMO ENVIRONMENT - fictional data, simulated payments</div>
+    <header id="top"><button id="menu" onclick="$('#side').classList.toggle('open')" aria-label="Menu">Menu</button>
+      <form class="search" onsubmit="A.search();return false"><input id="gs" placeholder="Search patient by name, ID, phone or scanned QR" aria-label="Search patients"><button class="btn">Find</button></form>
+      <div class="grow"></div>
+      <button class="btn" onclick="A.bell()" aria-label="Alerts">Alerts <span class="badge ${alerts().length ? 'warn' : ''}">${alerts().length}</span></button>
+      <label style="width:170px"><select aria-label="Switch demo user" onchange="A.switchUser(this.value)">${DEMO_USERS.map(u => `<option value="${u.user}" ${u.user === session.user ? 'selected' : ''}>View as: ${esc(ROLES[u.role].short)}</option>`).join('')}</select></label>
+      <div class="user"><div class="avatar">${esc(session.name.replace(/^(Dr\.|Sister|Brother)\s+/, '').split(' ').map(x => x[0]).slice(0, 2).join(''))}</div><div class="who"><div class="b">${esc(session.name)}</div><div class="sm mut">${esc(ROLES[session.role].label)}</div></div><button class="btn s" onclick="A.logout()">Sign out</button></div>
+    </header><main id="view" tabindex="-1"></main></div>`;
+  render();
+}
+def('go', (m, p) => { needMod(m); route = { m, p:p || {} }; $('#side') && $('#side').classList.remove('open'); render(); window.scrollTo(0, 0); });
+const VIEWS = {};
+function render() {
+  if (!session) return;
+  const cur = route.m === 'patient' ? 'patients' : route.m === 'consult' ? 'opd' : route.m;
+  if (!canMod(cur) && route.m !== 'patient' && route.m !== 'consult') route = { m:'dashboard', p:{} };
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.m === (route.m === 'patient' ? 'patients' : route.m === 'consult' ? 'opd' : route.m)));
+  const v = $('#view'); if (!v) return;
+  try { v.innerHTML = VIEWS[route.m](route.p); } catch (e) { console.error(e); v.innerHTML = empty('This screen could not be shown', e.message); }
+  const b = $('#top .btn .badge'); if (b) { const n = alerts().length; b.textContent = n; b.className = 'badge ' + (n ? 'warn' : ''); }
+}
+function commit(msg, kind) { save(); render(); if (msg) toast(msg, kind || 'ok'); }
+
+/* ---- global search, alerts, walkthrough, reset ---- */
+def('search', () => {
+  needMod('patients'); let q = $('#gs').value.trim(); if (!q) return;
+  const m = q.match(/WR:\/\/patient\/(WR-PAT-\d+)/i); if (m) q = m[1];
+  const ql = q.toLowerCase(); const hits = db.patients.filter(p => p.id.toLowerCase() === ql || p.name.toLowerCase().includes(ql) || p.phone.includes(q) || p.id.toLowerCase().includes(ql));
+  if (!hits.length) return toast('No patient matches "' + q + '". Check the spelling or register a new patient.', 'err');
+  if (hits.length === 1) { audit('Opened patient via search', hits[0].id); return A.openPatient(hits[0].id); }
+  openModal({ title:hits.length + ' patients found', noFocus:true, body:table(['Patient', 'Age / sex', 'Phone'], hits.slice(0, 30).map(p => [pLink(p.id).replace('onclick="', 'onclick="closeModal();'), age(p.dob) + ' / ' + p.gender, esc(p.phone)])) });
+});
+def('bell', () => { const a = alerts(); openModal({ title:'Alerts', noFocus:true, body: a.length ? a.map(x => `<div class="note ${x.k === 'bad' ? 'warn' : ''}" style="margin-bottom:8px;display:flex;justify-content:space-between;gap:10px;align-items:center"><span>${esc(x.t)}</span>${canMod(x.go) ? `<button class="btn s" onclick="closeModal();A.go('${x.go}')">Open</button>` : ''}</div>`).join('') : empty('No alerts', 'Stock, expiry and lab queues are all in order.') }); });
+def('resetDemo', () => {
+  need('demo.reset');
+  openModal({ title:'Reset demo data', body:'<p>This deletes everything you entered in this browser and loads the original fictional data again.</p>', footer:`<button class="btn" onclick="closeModal()">Keep my data</button><button class="btn d" onclick="A.doReset()">Reset demo</button>` });
+});
+def('doReset', () => { need('demo.reset'); db = buildSeed(); save(); closeModal(); route = { m:'dashboard', p:{} }; renderShell(); toast('Demo data has been reset.', 'ok'); });
+def('script', () => {
+  const steps = [['Sign in as administrator', 'dashboard', 'admin'], ['Register a patient and get the QR card', 'patients', 'admin'], ['Book an appointment', 'appointments', 'admin'], ['Check the patient in to OPD', 'appointments', 'reception'], ['Doctor records the consultation, prescription and lab order', 'opd', 'doctor'], ['Lab enters and verifies the result', 'lab', 'lab'], ['Pharmacist dispenses medicine (stock goes down)', 'pharmacy', 'pharmacist'], ['Accountant generates the invoice', 'billing', 'accountant'], ['Record a simulated payment', 'billing', 'accountant'], ['Admit another patient to a bed', 'ipd', 'admin'], ['Transfer the patient to another bed', 'ipd', 'nurse'], ['Discharge and print the summary', 'ipd', 'doctor'], ['Check dashboard and reports', 'reports', 'admin']];
+  openModal({ title:'Live demo walkthrough', noFocus:true, wide:true, body:`<p class="mut" style="margin-top:0">Follow these steps to show the full patient journey. Each button switches to the right role and opens the right screen.</p>${table(['Step', 'What to show', 'Role', ''], steps.map((s, i) => [i + 1, esc(s[0]), esc(ROLES[s[2]].short), `<button class="btn s" onclick="closeModal();A.switchUser('${s[2]}');A.go('${s[1]}')">Go</button>`]))}`, footer: can('demo.reset') ? `<button class="btn d" onclick="closeModal();A.resetDemo()">Reset demo data</button>` : '' });
+});
+
+/* ---- boot ---- */
+window.addEventListener('DOMContentLoaded', () => {
+  db = load();
+  let u = null; try { const s = sessionStorage.getItem('wr_sess'); if (s) u = DEMO_USERS.find(x => x.user === s); } catch (e) {}
+  if (u) startSession(u); else renderLogin();
+});
+
+/* ===== views 1: dashboard, patients, appointments, OPD/EMR, staff ===== */
+const ST = {};  /* small per-screen UI state (tabs, filters) */
+
+VIEWS.dashboard = () => {
+  const t = todayStr(); const r = session.role;
+  const bedsOcc = db.beds.filter(b => b.status === 'occupied').length, bedsFree = db.beds.filter(b => b.status === 'free').length;
+  const todayAp = db.appointments.filter(a => a.date === t && a.status !== 'Cancelled');
+  const outstanding = sum(db.invoices, balance);
+  const pendLab = db.labOrders.filter(l => l.status !== 'Verified').length;
+  const W = {
+    patients:{ l:'Registered patients', n:db.patients.length, go:'patients', roles:['admin', 'reception', 'doctor', 'nurse'] },
+    appts:{ l:"Today's appointments", n:todayAp.length, go:'appointments', roles:['admin', 'reception', 'doctor', 'nurse'] },
+    queue:{ l:'Waiting in OPD queue', n:todayAp.filter(a => a.status === 'Checked-in').length, go:'opd', roles:['admin', 'doctor', 'nurse', 'reception'], c:'w' },
+    adm:{ l:'Current admissions', n:activeAdm().length, go:'ipd', roles:['admin', 'doctor', 'nurse', 'reception'] },
+    beds:{ l:'Beds available / occupied', n:bedsFree + ' / ' + bedsOcc, go:'ipd', roles:['admin', 'nurse', 'reception', 'doctor'], c:'n2' },
+    coll:{ l:"Today's collections", n:money(collectionsOn(t)), go:'billing', roles:['admin', 'accountant', 'reception'] },
+    out:{ l:'Outstanding bills', n:money(outstanding), go:'billing', roles:['admin', 'accountant'], c:'d' },
+    lab:{ l:'Pending lab reports', n:pendLab, go:'lab', roles:['admin', 'lab', 'doctor'], c:'w' },
+    col:{ l:'Samples to collect', n:db.labOrders.filter(l => l.status === 'Ordered').length, go:'lab', roles:['lab'], c:'w' },
+    ver:{ l:'Results awaiting verification', n:db.labOrders.filter(l => l.status === 'Resulted').length, go:'lab', roles:['lab'], c:'d' },
+    rx:{ l:'Prescriptions to dispense', n:db.prescriptions.filter(x => x.status === 'Pending').length, go:'pharmacy', roles:['pharmacist'], c:'w' },
+    low:{ l:'Low-stock medicines', n:lowMeds().length, go:'pharmacy', roles:['admin', 'pharmacist'], c:'d' },
+    exp:{ l:'Batches expiring in 60 days', n:expiring(60).length, go:'pharmacy', roles:['admin', 'pharmacist'], c:'w' },
+    sup:{ l:'Supplies below minimum', n:db.items.filter(i => i.qty <= i.min).length, go:'inventory', roles:['admin', 'inventory'], c:'d' },
+    po:{ l:'Open purchase orders', n:db.pos.filter(p => p.status === 'Ordered').length, go:'inventory', roles:['inventory'], c:'n2' },
+    mine:{ l:'My consultations today', n:todayAp.filter(a => a.doctor === session.doctorId).length, go:'opd', roles:['doctor'], c:'n2' },
+  };
+  const kp = Object.values(W).filter(w => w.roles.includes(r));
+  const days = [...Array(7)].map((_, i) => addDays(i - 6));
+  const rev = days.map(d => collectionsOn(d));
+  const dept = db.departments.map(d => ({ l:d.name.split(' ')[0].slice(0, 6), v:db.appointments.filter(a => db.doctors.find(x => x.id === a.doctor).dept === d.id).length }));
+  const showCharts = ['admin', 'accountant'].includes(r);
+  const al = alerts().slice(0, 6);
+  const hi = new Date().getHours(); const greet = hi < 12 ? 'Good morning' : hi < 17 ? 'Good afternoon' : 'Good evening';
+  const myQ = todayAp.filter(a => ['Checked-in', 'In consultation'].includes(a.status) && (r !== 'doctor' || a.doctor === session.doctorId));
+  return `
+  <div class="head"><div><h1>${greet}, ${esc(session.name.split(' ').slice(0, 2).join(' '))}</h1><p>${esc(db.hospital.name)} - ${esc(ROLES[r].label)} dashboard</p></div>
+    <div class="row">${can('patient.create') ? `<button class="btn p" onclick="A.newPatient()">Register patient</button>` : ''}<button class="btn" onclick="A.script()">Demo walkthrough</button></div></div>
+  <div class="grid g4" style="margin-bottom:16px">${kp.map(k => `<div class="card kpi ${k.c || ''}" onclick="A.go('${k.go}')" role="link" tabindex="0"><span class="n mono">${k.n}</span><span class="l">${k.l}</span></div>`).join('')}</div>
+  ${showCharts ? `<div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><div class="ch"><h3>Collections, last 7 days</h3><span class="sm mut">Net of refunds</span></div><div class="cb">${lineChart([{ v:rev, c:'#0f9b8e' }], days.map(d => d.slice(8)), { fmt:v => money(v), label:'Collections last 7 days' })}</div></div>
+    <div class="card"><div class="ch"><h3>Appointments by department</h3><span class="sm mut">All time in demo</span></div><div class="cb">${barChart(dept, { color:'#12384f', label:'Appointments by department' })}</div></div></div>` : ''}
+  <div class="grid g21">
+    <div class="card"><div class="ch"><h3>${r === 'doctor' ? 'My queue' : "Today's OPD queue"}</h3>${canMod('opd') ? `<button class="btn s" onclick="A.go('opd')">Open OPD</button>` : ''}</div>
+      ${table(['Token', 'Patient', 'Doctor', 'Status'], myQ.slice(0, 8).map(a => [`<span class="token">${a.token || '-'}</span>`, pLink(a.patient), esc(DOC(a.doctor).name), badge(a.status)]), 'No patients waiting', 'Check in a patient from Appointments and they appear here.')}</div>
+    <div class="card"><div class="ch"><h3>Alerts</h3></div><div class="cb" style="display:grid;gap:8px">${al.length ? al.map(x => `<div class="note ${x.k === 'bad' ? 'warn' : ''}">${esc(x.t)}</div>`).join('') : '<span class="mut">Nothing needs attention.</span>'}</div></div>
+  </div>`;
+};
+
+/* ---------------- patients ---------------- */
+VIEWS.patients = () => {
+  const q = (ST.pq || '').toLowerCase();
+  const list = db.patients.filter(p => !q || p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || p.phone.includes(q)).sort((a, b) => b.id.localeCompare(a.id));
+  return `<div class="head"><div><h1>Patients</h1><p>${db.patients.length} registered. Every patient has one permanent ID.</p></div>
+    ${can('patient.create') ? `<button class="btn p" onclick="A.newPatient()">Register patient</button>` : ''}</div>
+  <div class="card"><div class="ch"><input style="max-width:340px" placeholder="Filter by name, ID or phone" value="${esc(ST.pq || '')}" oninput="ST.pq=this.value;A.refreshList()" aria-label="Filter patients"><span class="sm mut">${list.length} shown</span></div>
+  <div id="plist">${patientTable(list)}</div></div>`;
+};
+const patientTable = list => table(['Patient ID', 'Name', 'Age / sex', 'Phone', 'Blood group', 'Registered', ''], list.slice(0, 60).map(p => [`<span class="mono b">${p.id}</span>`, `<a href="#" onclick="A.openPatient('${p.id}');return false">${esc(p.name)}</a>`, age(p.dob) + ' / ' + p.gender[0], esc(p.phone), esc(p.bloodGroup), fdate(p.createdAt), `<button class="btn s" onclick="A.showCard('${p.id}')">ID card</button>`]), 'No patient matches', 'Try a different name or ID, or register a new patient.');
+def('refreshList', () => { const q = (ST.pq || '').toLowerCase(); const l = db.patients.filter(p => !q || p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || p.phone.includes(q)).sort((a, b) => b.id.localeCompare(a.id)); $('#plist').innerHTML = patientTable(l); });
+
+def('newPatient', () => {
+  need('patient.create');
+  openModal({ title:'Register new patient', wide:true, body:`<div id="pf" class="form">
+    ${field('Full name *', '<input name="name" required>')}${field('Gender *', '<select name="gender"><option>Female</option><option>Male</option><option>Other</option></select>')}
+    ${field('Date of birth *', `<input name="dob" type="date" max="${todayStr()}">`)}${field('Phone (10 digits) *', '<input name="phone" inputmode="numeric" maxlength="10">')}
+    ${field('Email', '<input name="email" type="email">')}${field('Blood group', '<select name="bloodGroup"><option>Unknown</option>' + ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(x => `<option>${x}</option>`).join('') + '</select>')}
+    ${field('Address', '<input name="address">', 'full')}
+    ${field('Emergency contact name *', '<input name="emergencyName">')}${field('Emergency contact phone *', '<input name="emergencyPhone" inputmode="numeric" maxlength="10">')}
+    ${field('Allergies', '<input name="allergies" placeholder="e.g. Penicillin, or None known">')}${field('Medical history', '<input name="history" placeholder="e.g. Hypertension, Type 2 diabetes">')}
+  </div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.savePatient()">Register and generate ID</button>` });
+});
+def('savePatient', () => {
+  need('patient.create'); const f = fv('pf');
+  if (f.name.length < 3) throw new VErr('Enter the patient\'s full name.');
+  if (!f.dob) throw new VErr('Enter the date of birth.');
+  if (!/^[6-9]\d{9}$/.test(f.phone)) throw new VErr('Enter a valid 10-digit mobile number.');
+  if (!f.emergencyName || !/^\d{10}$/.test(f.emergencyPhone)) throw new VErr('Add an emergency contact name and a 10-digit number.');
+  const dup = db.patients.find(p => p.phone === f.phone && p.name.toLowerCase() === f.name.toLowerCase());
+  if (dup) throw new VErr('This patient may already exist as ' + dup.id + '. Open the existing record instead.');
+  const p = { id:nextId(db, 'patient'), name:f.name, gender:f.gender, dob:f.dob, phone:f.phone, email:f.email, bloodGroup:f.bloodGroup, address:f.address, emergencyName:f.emergencyName, emergencyPhone:f.emergencyPhone, allergies:f.allergies || 'None known', history:f.history || 'None', createdAt:todayStr(), token:Math.random().toString(36).slice(2, 10) };
+  db.patients.push(p); audit('Registered patient', p.id); save(); render(); closeModal(); toast('Patient registered with ID ' + p.id, 'ok'); A.showCard(p.id, true);
+});
+def('showCard', (id, justNew) => {
+  const p = P(id);
+  openModal({ title:'Patient ID card', noFocus:true, body:`${justNew ? `<div class="note" style="margin-bottom:14px">Registration complete. The permanent patient ID is <b>${p.id}</b>.</div>` : ''}
+    <div class="row" style="align-items:flex-start;gap:24px">${cardHtml(p)}<div style="flex:1;min-width:220px" class="grid">
+      <div class="note">The QR code holds only the patient ID and a lookup key. No diagnosis, allergy or contact detail is inside it. Staff must sign in and have access to open the record.</div>
+      <button class="btn p" onclick="A.slip('${p.id}')">Registration slip</button>
+      ${can('appt.book') ? `<button class="btn" onclick="closeModal();A.bookAppt('${p.id}')">Book appointment</button>` : ''}
+      <button class="btn" onclick="closeModal();A.openPatient('${p.id}')">Open patient profile</button></div></div>`, footer:`<button class="btn n" onclick="window.print()">Print card</button>` });
+});
+const cardHtml = p => `<div class="idcard"><div class="top">${roseSvg(30)}<div><b>${esc(db.hospital.name)}</b><span>Patient identity card (demo)</span></div></div>
+  <div class="mid"><div class="qr">${qrSvg(patientQR(p))}</div><div><div class="sm mut">Patient ID</div><div class="pid mono">${p.id}</div><div class="b" style="margin-top:6px">${esc(p.name)}</div><div class="sm mut">${age(p.dob)} yrs, ${esc(p.gender)} | ${esc(p.bloodGroup)}</div></div></div>
+  <div class="foot">Scan with an authorised hospital account. Emergency: ${esc(db.hospital.phone)}</div></div>`;
+def('slip', id => { const p = P(id); showDoc('Registration slip', `${docHead('Registration slip')}<table><tr><td>Patient ID</td><td><b>${p.id}</b></td><td>Registered on</td><td>${fdate(p.createdAt)}</td></tr><tr><td>Name</td><td>${esc(p.name)}</td><td>Age / sex</td><td>${age(p.dob)} / ${esc(p.gender)}</td></tr><tr><td>Phone</td><td>${esc(p.phone)}</td><td>Blood group</td><td>${esc(p.bloodGroup)}</td></tr><tr><td>Address</td><td colspan="3">${esc(p.address || '-')}</td></tr><tr><td>Emergency contact</td><td colspan="3">${esc(p.emergencyName)} (${esc(p.emergencyPhone)})</td></tr><tr><td>Allergies</td><td colspan="3">${esc(p.allergies)}</td></tr></table><div style="display:flex;gap:18px;align-items:center"><div style="width:110px">${qrSvg(patientQR(p))}</div><div class="sm">Please keep this slip and carry your patient ID card on every visit. Quote ${p.id} at every counter.</div></div>`, false); });
+
+def('openPatient', id => { needMod('patients'); route = { m:'patient', p:{ id } }; ST.ptab = 'overview'; audit('Viewed patient record', id); render(); window.scrollTo(0, 0); });
+def('ptab', t => { ST.ptab = t; render(); });
+VIEWS.patient = ({ id }) => {
+  const p = P(id); const tab = ST.ptab || 'overview';
+  const visits = db.visits.filter(v => v.patient === id).sort((a, b) => b.date.localeCompare(a.date));
+  const rxs = db.prescriptions.filter(x => x.patient === id); const labs = db.labOrders.filter(l => l.patient === id); const invs = db.invoices.filter(i => i.patient === id); const adms = db.admissions.filter(a => a.patient === id);
+  let body = '';
+  if (tab === 'overview') body = `<div class="grid g2"><div class="card"><div class="ch"><h3>Details</h3></div><div class="cb"><dl class="kv"><dt>Patient ID</dt><dd class="b mono">${p.id}</dd><dt>Age / sex</dt><dd>${age(p.dob)} years, ${esc(p.gender)}</dd><dt>Date of birth</dt><dd>${fdate(p.dob)}</dd><dt>Phone</dt><dd>${esc(p.phone)}</dd><dt>Address</dt><dd>${esc(p.address || '-')}</dd><dt>Blood group</dt><dd>${esc(p.bloodGroup)}</dd><dt>Emergency</dt><dd>${esc(p.emergencyName)} (${esc(p.emergencyPhone)})</dd></dl></div></div>
+    <div class="card"><div class="ch"><h3>Clinical summary</h3></div><div class="cb"><dl class="kv"><dt>Allergies</dt><dd>${/none/i.test(p.allergies) ? esc(p.allergies) : `<span class="badge bad">${esc(p.allergies)}</span>`}</dd><dt>Medical history</dt><dd>${esc(p.history)}</dd><dt>Visits</dt><dd>${visits.length}</dd><dt>Last visit</dt><dd>${visits[0] ? fdate(visits[0].date) : 'No visits yet'}</dd><dt>Admission</dt><dd>${adms.find(a => a.status === 'Admitted') ? badge('Admitted') + ' ' + esc(bedName(adms.find(a => a.status === 'Admitted').bed)) : 'Not admitted'}</dd><dt>Outstanding</dt><dd>${money(sum(invs, balance))}</dd></dl></div></div></div>`;
+  if (tab === 'visits') body = `<div class="card">${table(['Date', 'Doctor', 'Diagnosis', 'Vitals', ''], visits.map(v => [fdate(v.date), esc(DOC(v.doctor).name), esc(v.diagnosis), `BP ${esc(v.vitals.bp)}, pulse ${v.vitals.pulse}, SpO2 ${v.vitals.spo2}%`, `<button class="btn s" onclick="A.visitSummary('${v.id}')">Visit summary</button>`]), 'No visits recorded', 'Visits appear here after a doctor completes a consultation.')}</div>`;
+  if (tab === 'rx') body = `<div class="card">${table(['Prescription', 'Date', 'Doctor', 'Medicines', 'Status', ''], rxs.map(x => [`<span class="mono">${x.id}</span>`, fdate(x.date), esc(DOC(x.doctor).name), x.items.map(i => esc(byId(db.medicines, i.med).name)).join(', '), badge(x.status), `<button class="btn s" onclick="A.printRx('${x.id}')">Print</button>`]), 'No prescriptions yet')}</div>`;
+  if (tab === 'lab') body = `<div class="card">${table(['Order', 'Date', 'Tests', 'Status', ''], labs.map(l => [`<span class="mono">${l.id}</span>`, fdate(l.date), esc(l.tests.map(t => t.name).join(', ')), badge(l.status), l.status === 'Verified' ? `<button class="btn s" onclick="A.printLab('${l.id}')">Report</button>` : '']), 'No lab orders yet')}</div>`;
+  if (tab === 'bills') body = `<div class="card">${table(['Invoice', 'Date', 'Total', 'Balance', 'Status', ''], invs.map(i => [`<span class="mono">${i.id}</span>`, fdate(i.date), money(net(i)), money(balance(i)), badge(i.status), canMod('billing') ? `<button class="btn s" onclick="A.invoice('${i.id}')">Open</button>` : '']), 'No invoices yet')}</div>`;
+  if (tab === 'adm') body = `<div class="card">${table(['Admission', 'Admitted', 'Bed', 'Diagnosis', 'Status'], adms.map(a => [`<span class="mono">${a.id}</span>`, fdate(a.admittedAt), esc(bedName(a.bed)), esc(a.diagnosis), badge(a.status)]), 'No admissions')}</div>`;
+  return `<div class="head"><div><a href="#" onclick="A.go('patients');return false" class="sm">Back to patients</a><h1>${esc(p.name)} <span class="mono mut" style="font-size:15px;font-weight:500">${p.id}</span></h1><p>${age(p.dob)} years, ${esc(p.gender)} | ${esc(p.phone)}</p></div>
+    <div class="row"><button class="btn" onclick="A.showCard('${p.id}')">ID card</button><button class="btn" onclick="A.slip('${p.id}')">Registration slip</button>${can('appt.book') ? `<button class="btn p" onclick="A.bookAppt('${p.id}')">Book appointment</button>` : ''}${can('ipd.admit') ? `<button class="btn" onclick="A.admit('${p.id}')">Admit</button>` : ''}</div></div>
+  ${tabs([['overview', 'Overview'], ['visits', 'Visits (' + visits.length + ')'], ['rx', 'Prescriptions (' + rxs.length + ')'], ['lab', 'Lab (' + labs.length + ')'], ['bills', 'Billing (' + invs.length + ')'], ['adm', 'Admissions (' + adms.length + ')']], tab, 'A.ptab')}${body}`;
+};
+
+/* ---------------- appointments + queue ---------------- */
+VIEWS.appointments = () => {
+  const tab = ST.atab || 'today'; const t = todayStr();
+  let list;
+  if (tab === 'today') list = db.appointments.filter(a => a.date === t); else if (tab === 'upcoming') list = db.appointments.filter(a => a.date > t); else list = db.appointments.filter(a => a.date < t);
+  list = list.slice().sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  const rows = list.map(a => [a.token ? `<span class="token">${a.token}</span>` : '<span class="mut">-</span>', `${fdate(a.date)}<div class="sm mut">${a.time}</div>`, pLink(a.patient), `${esc(DOC(a.doctor).name)}<div class="sm mut">${esc(deptName(DOC(a.doctor).dept))}</div>`, `${esc(a.reason)}<div class="sm mut">${a.type}</div>`, badge(a.status),
+    `<div class="row">${a.status === 'Booked' && can('appt.checkin') ? `<button class="btn s p" onclick="A.checkin('${a.id}')">Check in</button>` : ''}${['Booked', 'Checked-in'].includes(a.status) && can('appt.cancel') ? `<button class="btn s d" onclick="A.cancelAppt('${a.id}')">Cancel</button>` : ''}${a.visit ? `<button class="btn s" onclick="A.visitSummary('${a.visit}')">Summary</button>` : ''}</div>`]);
+  const sched = db.doctors.map(d => [`<b>${esc(d.name)}</b><div class="sm mut">${esc(d.qual)}</div>`, esc(deptName(d.dept)), esc(d.days), esc(d.slots), esc(d.room), money(d.fee), db.appointments.filter(a => a.doctor === d.id && a.date === t && a.status !== 'Cancelled').length]);
+  return `<div class="head"><div><h1>Appointments</h1><p>Book visits, register walk-ins and run the check-in queue.</p></div><div class="row">${can('appt.book') ? `<button class="btn" onclick="A.bookAppt('', true)">Walk-in</button><button class="btn p" onclick="A.bookAppt('')">Book appointment</button>` : ''}</div></div>
+  ${tabs([['today', "Today"], ['upcoming', 'Upcoming'], ['past', 'Past'], ['doctors', 'Doctor schedules']], tab, 'A.atab')}
+  <div class="card">${tab === 'doctors' ? table(['Doctor', 'Department', 'Days', 'Hours', 'Room', 'Fee', 'Today'], sched) : table(['Token', 'When', 'Patient', 'Doctor', 'Reason', 'Status', ''], rows, 'No appointments here', tab === 'today' ? 'Book an appointment or register a walk-in.' : '')}</div>`;
+};
+def('atab', t => { ST.atab = t; render(); });
+def('bookAppt', (pid, walkin) => {
+  need('appt.book');
+  openModal({ title: walkin ? 'Walk-in registration' : 'Book appointment', body:`<div id="af" class="form">
+    ${field('Patient *', `<select name="patient">${patientOptions(pid)}</select>`, 'full')}
+    ${field('Doctor *', `<select name="doctor">${opt(db.doctors, d => d.id, d => d.name + ' - ' + deptName(d.dept) + ' (' + money(d.fee) + ')')}</select>`, 'full')}
+    ${walkin ? '' : field('Date *', `<input type="date" name="date" min="${todayStr()}" value="${addDays(1)}">`) + field('Time *', `<select name="time">${['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '14:00', '14:30', '15:00', '15:30'].map(x => `<option>${x}</option>`).join('')}</select>`)}
+    ${field('Reason for visit *', '<input name="reason" placeholder="e.g. Fever for 2 days">', 'full')}</div>
+    ${walkin ? '<div class="note" style="margin-top:12px">Walk-ins are booked for now and checked in straight away. A token number is issued.</div>' : ''}
+    ${!pid && walkin ? `<p class="sm mut">New patient? <a href="#" onclick="closeModal();A.newPatient();return false">Register them first</a>.</p>` : ''}`,
+    footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveAppt(${walkin ? 'true' : 'false'})">${walkin ? 'Register walk-in' : 'Book appointment'}</button>` });
+});
+function issueToken(docId, date) { const k = docId + date; db.tokens[k] = (db.tokens[k] || 0) + 1; return db.tokens[k]; }
+def('saveAppt', walkin => {
+  need('appt.book'); const f = fv('af');
+  if (!f.patient) throw new VErr('Select a patient.'); if (!f.reason) throw new VErr('Enter the reason for the visit.');
+  const date = walkin ? todayStr() : f.date; const time = walkin ? new Date().toTimeString().slice(0, 5) : f.time;
+  if (!date || date < todayStr()) throw new VErr('Choose today or a future date.');
+  if (!walkin && db.appointments.some(a => a.doctor === f.doctor && a.date === date && a.time === time && a.status !== 'Cancelled')) throw new VErr('That slot is already booked for this doctor. Pick another time.');
+  if (db.appointments.some(a => a.patient === f.patient && a.date === date && ['Booked', 'Checked-in', 'In consultation'].includes(a.status) && a.doctor === f.doctor)) throw new VErr('This patient already has an appointment with this doctor on that day.');
+  const a = { id:nextId(db, 'appointment'), patient:f.patient, doctor:f.doctor, date, time, type: walkin ? 'Walk-in' : 'Scheduled', reason:f.reason, status: walkin ? 'Checked-in' : 'Booked', token: walkin ? issueToken(f.doctor, date) : null, visit:null, createdAt:todayStr() };
+  db.appointments.push(a); audit(walkin ? 'Walk-in registered' : 'Appointment booked', a.id); save(); closeModal(); route = { m:'appointments', p:{} }; ST.atab = date === todayStr() ? 'today' : 'upcoming'; render();
+  toast(walkin ? 'Walk-in checked in. Token ' + a.token : 'Appointment ' + a.id + ' booked for ' + fdate(date) + ' at ' + time, 'ok');
+});
+def('checkin', id => { need('appt.checkin'); const a = byId(db.appointments, id); if (a.date !== todayStr()) throw new VErr('Check-in is only possible on the day of the appointment (' + fdate(a.date) + ').'); a.status = 'Checked-in'; a.token = a.token || issueToken(a.doctor, a.date); audit('Patient checked in', a.id); commit('Checked in. Token ' + a.token + ' for ' + DOC(a.doctor).name); });
+def('cancelAppt', id => { need('appt.cancel'); const a = byId(db.appointments, id); a.status = 'Cancelled'; audit('Appointment cancelled', id); commit('Appointment cancelled', 'ok'); });
+
+/* ---------------- OPD + consultation (EMR) ---------------- */
+VIEWS.opd = () => {
+  const t = todayStr(); const mine = session.role === 'doctor' ? session.doctorId : (ST.opdDoc || '');
+  let q = db.appointments.filter(a => a.date === t && ['Checked-in', 'In consultation'].includes(a.status) && (!mine || a.doctor === mine)).sort((a, b) => (a.token || 0) - (b.token || 0));
+  const done = db.appointments.filter(a => a.date === t && a.status === 'Completed' && (!mine || a.doctor === mine));
+  return `<div class="head"><div><h1>OPD and consultations</h1><p>${session.role === 'doctor' ? esc(DOC(session.doctorId).name) + ' - your queue for today' : 'Patients waiting today'}</p></div>
+    ${session.role !== 'doctor' ? `<label style="width:260px">Doctor<select onchange="ST.opdDoc=this.value;render()"><option value="">All doctors</option>${opt(db.doctors, d => d.id, d => d.name, mine)}</select></label>` : ''}</div>
+  <div class="card" style="margin-bottom:16px"><div class="ch"><h3>Waiting (${q.length})</h3></div>${table(['Token', 'Patient', 'Doctor', 'Reason', 'Status', ''], q.map(a => [`<span class="token">${a.token}</span>`, pLink(a.patient), esc(DOC(a.doctor).name), esc(a.reason), badge(a.status),
+      `<div class="row">${can('vitals') ? `<button class="btn s" onclick="A.vitals('${a.id}')">Vitals</button>` : ''}${can('consult') ? `<button class="btn s p" onclick="A.startConsult('${a.id}')">${a.status === 'In consultation' ? 'Continue' : 'Start consultation'}</button>` : ''}</div>`]), 'Nobody is waiting', 'Patients appear here after check-in at reception.')}</div>
+  <div class="card"><div class="ch"><h3>Seen today (${done.length})</h3></div>${table(['Patient', 'Doctor', 'Diagnosis', ''], done.map(a => { const v = byId(db.visits, a.visit) || {}; return [pLink(a.patient), esc(DOC(a.doctor).name), esc(v.diagnosis || '-'), a.visit ? `<button class="btn s" onclick="A.visitSummary('${a.visit}')">Visit summary</button>` : '']; }), 'No consultations completed yet')}</div>`;
+};
+def('vitals', id => {
+  need('vitals'); const a = byId(db.appointments, id); const v = a.vitals || {};
+  openModal({ title:'Record vital signs - ' + P(a.patient).name, body:`<div id="vf" class="form">${field('Blood pressure', `<input name="bp" placeholder="120/80" value="${esc(v.bp || '')}">`)}${field('Pulse (per min)', `<input name="pulse" type="number" value="${esc(v.pulse || '')}">`)}${field('Temperature (F)', `<input name="temp" type="number" step="0.1" value="${esc(v.temp || '')}">`)}${field('SpO2 (%)', `<input name="spo2" type="number" value="${esc(v.spo2 || '')}">`)}${field('Weight (kg)', `<input name="weight" type="number" value="${esc(v.weight || '')}">`)}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveVitals('${id}')">Save vitals</button>` });
+});
+def('saveVitals', id => { need('vitals'); const f = fv('vf'); if (!/^\d{2,3}\/\d{2,3}$/.test(f.bp)) throw new VErr('Enter blood pressure like 120/80.'); const a = byId(db.appointments, id); a.vitals = { bp:f.bp, pulse:+f.pulse || 0, temp:+f.temp || 0, spo2:+f.spo2 || 0, weight:+f.weight || 0 }; audit('Vitals recorded', id); closeModal(); commit('Vitals saved'); });
+def('startConsult', id => { need('consult'); const a = byId(db.appointments, id); if (session.role === 'doctor' && a.doctor !== session.doctorId) throw new VErr('This patient is booked with ' + DOC(a.doctor).name + '.'); a.status = 'In consultation'; save(); route = { m:'consult', p:{ id } }; ST.rxRows = 1; render(); window.scrollTo(0, 0); });
+VIEWS.consult = ({ id }) => {
+  const a = byId(db.appointments, id); const p = P(a.patient); const v = a.vitals || {}; const old = db.visits.filter(x => x.patient === p.id).sort((x, y) => y.date.localeCompare(x.date)).slice(0, 3);
+  const rows = ST.rxRows || 1;
+  return `<div class="head"><div><a href="#" onclick="A.go('opd');return false" class="sm">Back to queue</a><h1>Consultation: ${esc(p.name)}</h1><p><span class="mono">${p.id}</span> | ${age(p.dob)} yrs, ${esc(p.gender)} | token ${a.token} | ${esc(DOC(a.doctor).name)}</p></div></div>
+  <div class="grid g21"><div class="grid" id="cf">
+    <div class="card"><div class="ch"><h3>Vital signs</h3></div><div class="cb form">${field('Blood pressure', `<input name="bp" value="${esc(v.bp || '')}" placeholder="120/80">`)}${field('Pulse', `<input name="pulse" type="number" value="${esc(v.pulse || '')}">`)}${field('Temp (F)', `<input name="temp" type="number" step="0.1" value="${esc(v.temp || '')}">`)}${field('SpO2 %', `<input name="spo2" type="number" value="${esc(v.spo2 || '')}">`)}${field('Weight kg', `<input name="weight" type="number" value="${esc(v.weight || '')}">`)}</div></div>
+    <div class="card"><div class="ch"><h3>Clinical notes</h3></div><div class="cb form">${field('Symptoms *', `<textarea name="symptoms">${esc(a.reason)}</textarea>`, 'full')}${field('Examination notes', '<textarea name="notes"></textarea>', 'full')}${field('Diagnosis *', '<input name="diagnosis" placeholder="e.g. Viral fever">')}${field('Treatment plan *', '<input name="plan" placeholder="e.g. Rest, fluids, medicines as prescribed">')}</div></div>
+    <div class="card"><div class="ch"><h3>Prescription</h3><button class="btn s" onclick="ST.rxRows=Math.min(6,(ST.rxRows||1)+1);A.keepForm()">Add medicine</button></div><div class="cb" style="display:grid;gap:10px">
+      ${[...Array(rows)].map((_, i) => `<div class="form" style="grid-template-columns:2fr 1fr 1.2fr .7fr .7fr">${field('Medicine', `<select name="med${i}"><option value="">None</option>${opt(db.medicines, m => m.id, m => m.name)}</select>`)}${field('Dose', `<input name="dose${i}" value="1 tablet">`)}${field('Frequency', `<select name="freq${i}"><option>Once daily</option><option selected>Twice daily</option><option>Three times daily</option><option>At night</option><option>As needed</option></select>`)}${field('Days', `<input name="days${i}" type="number" min="1" value="5">`)}${field('Qty', `<input name="qty${i}" type="number" min="1" value="10">`)}</div>`).join('')}
+      <div class="sm mut">Allergy on file: <b>${esc(p.allergies)}</b></div></div></div>
+    <div class="card"><div class="ch"><h3>Lab tests and follow-up</h3></div><div class="cb"><div class="pills" style="margin-bottom:12px">${db.labTests.map(t => `<label style="display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--ink);font-weight:500"><input type="checkbox" name="labs" value="${t.code}" style="width:auto"> ${esc(t.name)} (${money(t.price)})</label>`).join('')}</div>
+      <div class="form">${field('Follow-up date', `<input type="date" name="followup" min="${addDays(1)}">`)}</div></div></div>
+    <div class="row"><button class="btn p" onclick="A.finishConsult('${id}')">Complete consultation</button><button class="btn" onclick="A.go('opd')">Save later</button></div>
+  </div>
+  <div class="grid" style="align-content:start"><div class="card"><div class="ch"><h3>Patient background</h3></div><div class="cb"><dl class="kv"><dt>Allergies</dt><dd>${esc(p.allergies)}</dd><dt>History</dt><dd>${esc(p.history)}</dd><dt>Blood group</dt><dd>${esc(p.bloodGroup)}</dd></dl></div></div>
+    <div class="card"><div class="ch"><h3>Previous visits</h3></div>${old.length ? old.map(o => `<div class="cb" style="border-bottom:1px solid var(--line)"><b>${esc(o.diagnosis)}</b><div class="sm mut">${fdate(o.date)} - ${esc(DOC(o.doctor).name)}</div></div>`).join('') : empty('First visit', 'No earlier visits on record.')}</div></div></div>`;
+};
+def('keepForm', () => { const f = fv('cf'); render(); Object.entries(f).forEach(([k, v]) => { const el = document.querySelector('#cf [name="' + k + '"]'); if (el && el.type !== 'checkbox') el.value = v; else if (el && Array.isArray(v)) { document.querySelectorAll('#cf [name="labs"]').forEach(c => c.checked = v.includes(c.value)); } }); });
+def('finishConsult', id => {
+  need('consult'); const f = fv('cf'); const a = byId(db.appointments, id);
+  if (!f.symptoms) throw new VErr('Enter the symptoms.'); if (!f.diagnosis) throw new VErr('Enter a diagnosis.'); if (!f.plan) throw new VErr('Enter a treatment plan.');
+  if (!/^\d{2,3}\/\d{2,3}$/.test(f.bp)) throw new VErr('Enter blood pressure like 120/80 (nurse or doctor can record it).');
+  const items = []; for (let i = 0; i < 6; i++) { if (f['med' + i]) { const q = +f['qty' + i], d = +f['days' + i]; if (!(q > 0) || !(d > 0)) throw new VErr('Enter quantity and days for each medicine.'); items.push({ med:f['med' + i], dose:f['dose' + i], freq:f['freq' + i], days:d, qty:q }); } }
+  const visit = { id:nextId(db, 'visit'), patient:a.patient, doctor:a.doctor, appt:a.id, date:todayStr(), symptoms:f.symptoms, vitals:{ bp:f.bp, pulse:+f.pulse || 0, temp:+f.temp || 0, spo2:+f.spo2 || 0, weight:+f.weight || 0 }, notes:f.notes || '-', diagnosis:f.diagnosis, plan:f.plan, followUp:f.followup || null };
+  db.visits.push(visit); a.visit = visit.id; a.status = 'Completed';
+  if (items.length) db.prescriptions.push({ id:nextId(db, 'rx'), visit:visit.id, patient:a.patient, doctor:a.doctor, date:todayStr(), status:'Pending', items });
+  if (f.labs && f.labs.length) db.labOrders.push({ id:nextId(db, 'lab'), patient:a.patient, doctor:a.doctor, visit:visit.id, date:todayStr(), status:'Ordered', tests:f.labs.map(c => { const t = db.labTests.find(x => x.code === c); return { code:c, name:t.name, price:t.price, result:'', flag:'' }; }), verifiedBy:'' });
+  if (f.followup) db.appointments.push({ id:nextId(db, 'appointment'), patient:a.patient, doctor:a.doctor, date:f.followup, time:'10:00', type:'Scheduled', reason:'Follow-up: ' + f.diagnosis, status:'Booked', token:null, visit:null, createdAt:todayStr() });
+  audit('Consultation completed', visit.id + ' for ' + a.patient); save(); route = { m:'opd', p:{} }; render();
+  toast('Consultation saved' + (items.length ? ', prescription created' : '') + (f.labs && f.labs.length ? ', lab order sent' : ''), 'ok'); A.visitSummary(visit.id);
+});
+def('visitSummary', id => {
+  const v = byId(db.visits, id); const p = P(v.patient); const rx = db.prescriptions.find(x => x.visit === id); const lo = db.labOrders.filter(x => x.visit === id);
+  showDoc('Visit summary', `${docHead('Visit summary')}<table><tr><td>Patient</td><td><b>${esc(p.name)}</b> (${p.id})</td><td>Date</td><td>${fdate(v.date)}</td></tr><tr><td>Age / sex</td><td>${age(p.dob)} / ${esc(p.gender)}</td><td>Doctor</td><td>${esc(DOC(v.doctor).name)}</td></tr></table>
+  <p><b>Vitals:</b> BP ${esc(v.vitals.bp)}, pulse ${v.vitals.pulse}/min, temperature ${v.vitals.temp} F, SpO2 ${v.vitals.spo2}%, weight ${v.vitals.weight} kg</p><p><b>Symptoms:</b> ${esc(v.symptoms)}</p><p><b>Examination:</b> ${esc(v.notes)}</p><p><b>Diagnosis:</b> ${esc(v.diagnosis)}</p><p><b>Treatment plan:</b> ${esc(v.plan)}</p>
+  ${rx ? `<b>Prescription ${rx.id}</b><table><tr><th>Medicine</th><th>Dose</th><th>Frequency</th><th>Days</th><th>Qty</th></tr>${rx.items.map(i => `<tr><td>${esc(byId(db.medicines, i.med).name)}</td><td>${esc(i.dose)}</td><td>${esc(i.freq)}</td><td>${i.days}</td><td>${i.qty}</td></tr>`).join('')}</table>` : ''}
+  ${lo.length ? `<p><b>Lab tests ordered:</b> ${lo.map(l => esc(l.id) + ' (' + esc(l.tests.map(t => t.name).join(', ')) + ')').join('; ')}</p>` : ''}${v.followUp ? `<p><b>Follow-up:</b> ${fdate(v.followUp)}</p>` : ''}<div class="sig"><span>Patient signature</span><span>${esc(DOC(v.doctor).name)}</span></div>`);
+});
+def('printRx', id => {
+  const x = byId(db.prescriptions, id); const p = P(x.patient);
+  showDoc('Prescription', `${docHead('Prescription ' + x.id)}<p><b>${esc(p.name)}</b> (${p.id}), ${age(p.dob)} yrs, ${esc(p.gender)} | Allergies: ${esc(p.allergies)}</p><table><tr><th>Medicine</th><th>Dose</th><th>Frequency</th><th>Days</th><th>Qty</th></tr>${x.items.map(i => `<tr><td>${esc(byId(db.medicines, i.med).name)}</td><td>${esc(i.dose)}</td><td>${esc(i.freq)}</td><td>${i.days}</td><td>${i.qty}</td></tr>`).join('')}</table><div class="sig"><span>${fdate(x.date)}</span><span>${esc(DOC(x.doctor).name)}</span></div>`, false);
+});
+
+/* ---------------- doctors and staff ---------------- */
+VIEWS.staff = () => {
+  const tab = ST.stab || 'doctors'; const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  let body;
+  if (tab === 'doctors') body = table(['Doctor', 'Department', 'Qualification', 'Fee', 'Days / hours', 'Room', 'Staff ID'], db.doctors.map(d => [`<b>${esc(d.name)}</b>`, esc(deptName(d.dept)), esc(d.qual), money(d.fee), esc(d.days) + '<div class="sm mut">' + d.slots + '</div>', esc(d.room), `<span class="mono">${d.staffId}</span>`]));
+  else if (tab === 'staff') body = table(['Staff ID', 'Name', 'Role', 'Department', 'Shift', 'Phone'], db.staff.map(s => [`<span class="mono">${s.id}</span>`, esc(s.name), esc(ROLES[s.role].label), esc(s.dept), esc(s.shift), esc(s.phone)]));
+  else body = table(['Staff', 'Shift', ...days], db.staff.filter(s => s.role !== 'doctor').map((s, i) => [esc(s.name) + '<div class="sm mut">' + esc(ROLES[s.role].short) + '</div>', esc(s.shift), ...days.map((d, k) => (k + i) % 7 === 6 ? '<span class="mut">Off</span>' : `<span class="badge ${s.shift === 'Night' ? 'info' : 'teal'}">${s.shift[0]}</span>`)]));
+  return `<div class="head"><div><h1>Doctors and staff</h1><p>${db.doctors.length} doctors, ${db.staff.length - db.doctors.length} staff members</p></div><button class="btn p" onclick="A.newStaff()">Add staff member</button></div>
+  ${tabs([['doctors', 'Doctors'], ['staff', 'All staff'], ['roster', 'Duty roster']], tab, 'A.stab')}<div class="card">${body}</div>`;
+};
+def('stab', t => { ST.stab = t; render(); });
+def('newStaff', () => { need('staff.manage'); openModal({ title:'Add staff member', body:`<div id="sf" class="form">${field('Full name *', '<input name="name">')}${field('Role *', `<select name="role">${Object.keys(ROLES).filter(r => r !== 'doctor').map(r => `<option value="${r}">${ROLES[r].label}</option>`).join('')}</select>`)}${field('Department', '<input name="dept">')}${field('Shift', '<select name="shift"><option>Day</option><option>Evening</option><option>Night</option></select>')}${field('Phone', '<input name="phone">')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveStaff()">Add staff member</button>` }); });
+def('saveStaff', () => { need('staff.manage'); const f = fv('sf'); if (f.name.length < 3) throw new VErr('Enter the staff member\'s name.'); const s = { id:nextId(db, 'staff'), name:f.name, role:f.role, dept:f.dept || '-', shift:f.shift, phone:f.phone || '-', active:true }; db.staff.push(s); audit('Staff added', s.id); closeModal(); commit('Added ' + s.name + ' as ' + s.id); });
+
+/* ===== views 2: IPD/beds, laboratory, pharmacy, inventory, billing, reports, audit ===== */
+
+/* ---------------- IPD and beds ---------------- */
+const bedIsFree = id => { const b = BED(id); return b.status === 'free' && !db.admissions.some(a => a.status === 'Admitted' && a.bed === id); };
+VIEWS.ipd = () => {
+  const tab = ST.itab || 'beds'; let body = '';
+  if (tab === 'beds') body = db.wards.map(w => { const bs = db.beds.filter(b => b.ward === w.id); const occ = bs.filter(b => b.status === 'occupied').length;
+    return `<div class="ward card"><div class="ch"><h3>${esc(w.name)}</h3><span class="sm mut">${occ} of ${bs.length} occupied | ${money(w.rate)} per day</span></div><div class="cb"><div class="beds">${bs.map(b => {
+      const ad = db.admissions.find(a => a.status === 'Admitted' && a.bed === b.id);
+      if (ad) return `<div class="bed occ"><b>${esc(b.label)}</b><div>${esc(P(ad.patient).name)}</div><div class="sm mut">${ad.patient}</div><div class="row" style="margin-top:6px"><button class="btn s" onclick="A.admDetail('${ad.id}')">Open</button></div></div>`;
+      if (b.status === 'maintenance') return `<div class="bed mnt"><b>${esc(b.label)}</b><div>Under maintenance</div></div>`;
+      return `<div class="bed free" onclick="A.admit('', '${b.id}')" role="button" tabindex="0"><b>${esc(b.label)}</b><div class="mut">Available</div>${can('ipd.admit') ? '<div class="sm" style="color:var(--teal-d)">Click to admit</div>' : ''}</div>`; }).join('')}</div></div></div>`; }).join('');
+  if (tab === 'adm') { const l = db.admissions.slice().sort((a, b) => (b.admittedAt).localeCompare(a.admittedAt)); body = `<div class="card">${table(['Admission', 'Patient', 'Doctor', 'Bed', 'Admitted', 'Diagnosis', 'Status', ''], l.map(a => [`<span class="mono">${a.id}</span>`, pLink(a.patient), esc(DOC(a.doctor).name), esc(bedName(a.bed)), fdate(a.admittedAt), esc(a.diagnosis), badge(a.status), `<button class="btn s" onclick="A.admDetail('${a.id}')">Open</button>`]), 'No admissions yet')}</div>`; }
+  if (tab === 'wards') body = `<div class="card">${table(['Ward / room type', 'Beds', 'Occupied', 'Available', 'Charge per day', 'Occupancy'], db.wards.map(w => { const bs = db.beds.filter(b => b.ward === w.id); const o = bs.filter(b => b.status === 'occupied').length; const pct = Math.round(100 * o / bs.length); return [`<b>${esc(w.name)}</b>`, bs.length, o, bs.filter(b => b.status === 'free').length, money(w.rate), `<div class="bar ${pct > 85 ? 'd' : pct > 60 ? 'w' : ''}" style="min-width:120px"><i style="width:${pct}%"></i></div><span class="sm mut">${pct}%</span>`]; }))}</div>`;
+  return `<div class="head"><div><h1>IPD and bed management</h1><p>${activeAdm().length} patients admitted. A bed can hold only one active patient.</p></div>${can('ipd.admit') ? `<button class="btn p" onclick="A.admit('')">Admit patient</button>` : ''}</div>
+  ${tabs([['beds', 'Bed map'], ['adm', 'Admissions'], ['wards', 'Wards and rooms']], tab, 'A.itab')}${body}`;
+};
+def('itab', t => { ST.itab = t; render(); });
+def('admit', (pid, bedId) => {
+  need('ipd.admit'); const admitted = new Set(activeAdm().map(a => a.patient));
+  const free = db.beds.filter(b => bedIsFree(b.id));
+  if (!free.length) throw new VErr('No beds are free right now.');
+  openModal({ title:'Admit patient', body:`<div id="adf" class="form">${field('Patient *', `<select name="patient"><option value="">Select patient</option>${opt(db.patients.filter(p => !admitted.has(p.id)), p => p.id, p => p.id + '  ' + p.name, pid)}</select>`, 'full')}
+    ${field('Attending doctor *', `<select name="doctor">${opt(db.doctors, d => d.id, d => d.name + ' - ' + deptName(d.dept), session.doctorId)}</select>`, 'full')}
+    ${field('Bed *', `<select name="bed">${opt(free, b => b.id, b => bedName(b.id) + ' (' + money(BED(b.id).rate) + '/day)', bedId)}</select>`, 'full')}
+    ${field('Reason for admission *', '<input name="diagnosis" placeholder="e.g. Pneumonia, observation">', 'full')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveAdmit()">Admit patient</button>` });
+});
+def('saveAdmit', () => {
+  need('ipd.admit'); const f = fv('adf');
+  if (!f.patient) throw new VErr('Select a patient.'); if (!f.diagnosis) throw new VErr('Enter the reason for admission.');
+  if (activeAdm().some(a => a.patient === f.patient)) throw new VErr('This patient is already admitted.');
+  if (!bedIsFree(f.bed)) throw new VErr('That bed is no longer free. Choose another bed.');
+  const a = { id:nextId(db, 'admission'), patient:f.patient, doctor:f.doctor, bed:f.bed, diagnosis:f.diagnosis, admittedAt:todayStr(), status:'Admitted', history:[{ bed:f.bed, from:todayStr(), to:null }], dischargedAt:null, summary:'' };
+  BED(f.bed).status = 'occupied'; db.admissions.push(a); audit('Patient admitted', a.id + ' to ' + f.bed); closeModal(); route = { m:'ipd', p:{} }; ST.itab = 'beds'; commit(P(f.patient).name + ' admitted to ' + bedName(f.bed) + ' (' + a.id + ')');
+});
+def('admDetail', id => {
+  const a = byId(db.admissions, id); const act = a.status === 'Admitted';
+  openModal({ title:'Admission ' + a.id, wide:true, noFocus:true, body:`<div class="grid g2"><dl class="kv"><dt>Patient</dt><dd>${esc(P(a.patient).name)} <span class="mono sm mut">${a.patient}</span></dd><dt>Doctor</dt><dd>${esc(DOC(a.doctor).name)}</dd><dt>Diagnosis</dt><dd>${esc(a.diagnosis)}</dd><dt>Admitted</dt><dd>${fdate(a.admittedAt)}</dd><dt>Status</dt><dd>${badge(a.status)}</dd>${a.dischargedAt ? `<dt>Discharged</dt><dd>${fdate(a.dischargedAt)}</dd>` : ''}</dl>
+    <div><b>Bed history</b>${table(['Bed', 'From', 'To', 'Days'], a.history.map(h => [esc(bedName(h.bed)), fdate(h.from), h.to ? fdate(h.to) : 'Current', stayDays(h)]))}</div></div>${a.summary ? `<div class="note" style="margin-top:12px"><b>Discharge summary:</b> ${esc(a.summary)}</div>` : ''}`,
+    footer:`${act && can('ipd.transfer') ? `<button class="btn" onclick="A.transfer('${id}')">Transfer bed</button>` : ''}${act && can('ipd.discharge') ? `<button class="btn p" onclick="A.discharge('${id}')">Discharge</button>` : ''}${!act ? `<button class="btn" onclick="A.dischargeDoc('${id}')">Print discharge summary</button>` : ''}${canMod('billing') && can('bill.create') ? `<button class="btn" onclick="A.admInvoice('${id}')">Generate room-charge invoice</button>` : ''}` });
+});
+const stayDays = h => Math.max(1, Math.round((new Date((h.to || todayStr()) + 'T00:00:00') - new Date(h.from + 'T00:00:00')) / 864e5) + (h.to ? 0 : 1));
+def('transfer', id => {
+  need('ipd.transfer'); const a = byId(db.admissions, id); const free = db.beds.filter(b => bedIsFree(b.id));
+  if (!free.length) throw new VErr('No free beds available to transfer to.');
+  openModal({ title:'Transfer ' + P(a.patient).name, body:`<p>Currently in <b>${esc(bedName(a.bed))}</b>.</p><div id="tf" class="form">${field('Move to bed *', `<select name="bed">${opt(free, b => b.id, b => bedName(b.id) + ' (' + money(b.rate) + '/day)')}</select>`, 'full')}${field('Reason', '<input name="why" placeholder="e.g. Needs ICU monitoring">', 'full')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveTransfer('${id}')">Transfer patient</button>` });
+});
+def('saveTransfer', id => {
+  need('ipd.transfer'); const f = fv('tf'); const a = byId(db.admissions, id);
+  if (a.status !== 'Admitted') throw new VErr('Only admitted patients can be transferred.');
+  if (!bedIsFree(f.bed)) throw new VErr('That bed was just taken. Choose another bed.');
+  const old = a.bed; BED(old).status = 'free'; BED(f.bed).status = 'occupied';
+  const cur = a.history[a.history.length - 1]; cur.to = todayStr(); a.history.push({ bed:f.bed, from:todayStr(), to:null }); a.bed = f.bed;
+  audit('Bed transfer', a.id + ': ' + old + ' to ' + f.bed + (f.why ? ' (' + f.why + ')' : '')); closeModal(); commit('Transferred to ' + bedName(f.bed) + '. ' + bedName(old) + ' is free again.');
+});
+def('discharge', id => {
+  need('ipd.discharge'); const a = byId(db.admissions, id);
+  openModal({ title:'Discharge ' + P(a.patient).name, body:`<div id="df" class="form">${field('Discharge summary *', `<textarea name="summary" style="min-height:120px">Admitted with ${esc(a.diagnosis)}. Treated and monitored. Condition at discharge: stable. Advice: continue prescribed medicines, rest, review in OPD after 7 days.</textarea>`, 'full')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveDischarge('${id}')">Confirm discharge</button>` });
+});
+def('saveDischarge', id => {
+  need('ipd.discharge'); const f = fv('df'); const a = byId(db.admissions, id); if (f.summary.length < 10) throw new VErr('Write a short discharge summary.');
+  a.status = 'Discharged'; a.dischargedAt = todayStr(); a.summary = f.summary; a.history[a.history.length - 1].to = todayStr(); BED(a.bed).status = 'free';
+  audit('Patient discharged', a.id); closeModal(); commit('Discharged. Bed ' + bedName(a.bed) + ' is free.'); A.dischargeDoc(id);
+});
+def('dischargeDoc', id => { const a = byId(db.admissions, id); const p = P(a.patient); showDoc('Discharge summary', `${docHead('Discharge summary')}<table><tr><td>Patient</td><td><b>${esc(p.name)}</b> (${p.id})</td><td>Admission</td><td>${a.id}</td></tr><tr><td>Age / sex</td><td>${age(p.dob)} / ${esc(p.gender)}</td><td>Doctor</td><td>${esc(DOC(a.doctor).name)}</td></tr><tr><td>Admitted</td><td>${fdate(a.admittedAt)}</td><td>Discharged</td><td>${fdate(a.dischargedAt)}</td></tr></table><p><b>Diagnosis:</b> ${esc(a.diagnosis)}</p><p><b>Bed history:</b> ${a.history.map(h => esc(bedName(h.bed)) + ' (' + stayDays(h) + ' day' + (stayDays(h) > 1 ? 's' : '') + ')').join(', ')}</p><p><b>Summary:</b> ${esc(a.summary)}</p><div class="sig"><span>Patient / attendant</span><span>${esc(DOC(a.doctor).name)}</span></div>`); });
+
+/* ---------------- laboratory ---------------- */
+VIEWS.lab = () => {
+  const tab = ST.ltab || 'queue'; const flt = ST.lflt || 'All'; let body = '';
+  if (tab === 'queue') {
+    const st = ['All', 'Ordered', 'Sample collected', 'Processing', 'Resulted', 'Verified']; const l = db.labOrders.filter(o => flt === 'All' || o.status === flt).sort((a, b) => b.id.localeCompare(a.id));
+    body = `<div class="pills" style="margin-bottom:12px">${st.map(s => `<button class="pill ${flt === s ? 'on' : ''}" onclick="ST.lflt='${s}';render()">${s} ${s === 'All' ? '' : '(' + db.labOrders.filter(o => o.status === s).length + ')'}</button>`).join('')}</div><div class="card">${table(['Order', 'Patient', 'Tests', 'Ordered by', 'Status', ''], l.map(o => [`<span class="mono b">${o.id}</span><div class="sm mut">${fdate(o.date)}</div>`, pLink(o.patient), esc(o.tests.map(t => t.name).join(', ')), esc(DOC(o.doctor).name), badge(o.status), labActions(o)]), 'No lab orders in this state', 'Doctors send orders from the consultation screen.')}</div>`; }
+  else body = `<div class="card">${table(['Code', 'Test', 'Department', 'Price', 'Reference range'], db.labTests.map(t => [`<span class="mono">${t.code}</span>`, esc(t.name), esc(t.dept), money(t.price), esc(t.range)]))}</div>`;
+  return `<div class="head"><div><h1>Laboratory</h1><p>Order, collect, process, enter results and verify. Results are only released after verification.</p></div>${can('lab.order') ? `<button class="btn p" onclick="A.newLab()">New lab order</button>` : ''}</div>${tabs([['queue', 'Orders'], ['catalog', 'Test catalogue']], tab, 'A.ltab')}${body}`;
+};
+def('ltab', t => { ST.ltab = t; render(); });
+function labActions(o) {
+  const b = [];
+  if (o.status === 'Ordered' && can('lab.process')) b.push(`<button class="btn s p" onclick="A.labStep('${o.id}','Sample collected')">Collect sample</button>`);
+  if (o.status === 'Sample collected' && can('lab.process')) b.push(`<button class="btn s p" onclick="A.labStep('${o.id}','Processing')">Start processing</button>`);
+  if (o.status === 'Processing' && can('lab.process')) b.push(`<button class="btn s p" onclick="A.labResult('${o.id}')">Enter results</button>`);
+  if (o.status === 'Resulted') { if (can('lab.process')) b.push(`<button class="btn s" onclick="A.labResult('${o.id}')">Edit</button>`); if (can('lab.verify')) b.push(`<button class="btn s p" onclick="A.labVerify('${o.id}')">Verify</button>`); }
+  if (o.status === 'Verified') b.push(`<button class="btn s" onclick="A.printLab('${o.id}')">Print report</button>`);
+  return `<div class="row">${b.join('')}</div>`;
+}
+def('labStep', (id, st) => { need('lab.process'); const o = byId(db.labOrders, id); o.status = st; audit('Lab order ' + st, id); commit(id + ': ' + st.toLowerCase()); });
+def('labResult', id => {
+  need('lab.process'); const o = byId(db.labOrders, id);
+  openModal({ title:'Enter results - ' + id, body:`<p class="mut" style="margin-top:0">${esc(P(o.patient).name)} (${o.patient})</p><div id="lr" class="grid">${o.tests.map((t, i) => { const ref = byId2(db.labTests, t.code); return `<div class="card cb"><b>${esc(t.name)}</b> <span class="sm mut">Reference: ${esc(ref ? ref.range : '-')}</span><div class="form" style="margin-top:8px;grid-template-columns:3fr 1fr">${field('Result *', `<input name="r${i}" value="${esc(t.result)}">`)}${field('Flag', `<select name="f${i}">${['Normal', 'High', 'Low', 'Critical'].map(x => `<option ${t.flag === x ? 'selected' : ''}>${x}</option>`).join('')}</select>`)}</div></div>`; }).join('')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveLab('${id}')">Save results</button>` });
+});
+const byId2 = (arr, code) => arr.find(x => x.code === code);
+def('saveLab', id => { need('lab.process'); const f = fv('lr'); const o = byId(db.labOrders, id); o.tests.forEach((t, i) => { if (!f['r' + i]) throw new VErr('Enter a result for ' + t.name + '.'); }); o.tests.forEach((t, i) => { t.result = f['r' + i]; t.flag = f['f' + i]; }); o.status = 'Resulted'; audit('Lab results entered', id); closeModal(); commit('Results saved. Waiting for verification.'); });
+def('labVerify', id => { need('lab.verify'); const o = byId(db.labOrders, id); o.status = 'Verified'; o.verifiedBy = session.name; audit('Lab results verified', id); commit(id + ' verified and released to the doctor'); });
+def('printLab', id => { const o = byId(db.labOrders, id); const p = P(o.patient); showDoc('Lab report', `${docHead('Laboratory report ' + o.id)}<p><b>${esc(p.name)}</b> (${p.id}), ${age(p.dob)} yrs, ${esc(p.gender)} | Ordered by ${esc(DOC(o.doctor).name)} on ${fdate(o.date)}</p><table><tr><th>Test</th><th>Result</th><th>Flag</th><th>Reference</th></tr>${o.tests.map(t => `<tr><td>${esc(t.name)}</td><td><b>${esc(t.result)}</b></td><td>${esc(t.flag)}</td><td>${esc((byId2(db.labTests, t.code) || {}).range || '')}</td></tr>`).join('')}</table><div class="sig"><span>Verified by ${esc(o.verifiedBy)}</span><span>Laboratory seal</span></div>`); });
+def('newLab', () => { need('lab.order'); openModal({ title:'New lab order', body:`<div id="nl" class="form">${field('Patient *', `<select name="patient">${patientOptions('')}</select>`, 'full')}${field('Doctor', `<select name="doctor">${opt(db.doctors, d => d.id, d => d.name, session.doctorId)}</select>`, 'full')}<div class="full pills">${db.labTests.map(t => `<label style="display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--ink);font-weight:500"><input type="checkbox" name="labs" value="${t.code}" style="width:auto"> ${esc(t.name)} (${money(t.price)})</label>`).join('')}</div></div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveNewLab()">Create order</button>` }); });
+def('saveNewLab', () => { need('lab.order'); const f = fv('nl'); if (!f.patient) throw new VErr('Select a patient.'); if (!f.labs.length) throw new VErr('Pick at least one test.'); const o = { id:nextId(db, 'lab'), patient:f.patient, doctor:f.doctor, visit:null, date:todayStr(), status:'Ordered', tests:f.labs.map(c => { const t = byId2(db.labTests, c); return { code:c, name:t.name, price:t.price, result:'', flag:'' }; }), verifiedBy:'' }; db.labOrders.push(o); audit('Lab order created', o.id); closeModal(); commit('Lab order ' + o.id + ' created'); });
+
+/* ---------------- pharmacy ---------------- */
+VIEWS.pharmacy = () => {
+  const tab = ST.phtab || 'dispense'; let body = '';
+  if (tab === 'dispense') { const l = db.prescriptions.filter(x => x.status === 'Pending'); body = `<div class="card"><div class="ch"><h3>Prescriptions waiting (${l.length})</h3></div>${table(['Prescription', 'Patient', 'Doctor', 'Medicines', ''], l.map(x => [`<span class="mono b">${x.id}</span><div class="sm mut">${fdate(x.date)}</div>`, pLink(x.patient), esc(DOC(x.doctor).name), x.items.map(i => esc(byId(db.medicines, i.med).name) + ' x' + i.qty).join('<br>'), `<button class="btn s p" onclick="A.dispense('${x.id}')">Dispense</button>`]), 'No prescriptions waiting', 'New prescriptions from doctors appear here.')}</div>`; }
+  if (tab === 'stock') body = `<div class="card"><div class="ch"><h3>Medicine stock</h3>${can('pharm.stock') ? `<button class="btn s p" onclick="A.addBatch()">Add stock batch</button>` : ''}</div>${table(['Medicine', 'Category', 'Price', 'In stock', 'Reorder at', 'Nearest expiry', 'Status'], db.medicines.map(m => { const q = medStock(m.id); const bs = db.batches.filter(b => b.med === m.id && b.qty > 0).sort((a, b) => a.expiry.localeCompare(b.expiry)); const low = q <= m.reorder; return [`<b>${esc(m.name)}</b><div class="sm mut">${esc(m.form)}</div>`, esc(m.category), money(m.price), `<b class="mono">${q}</b>`, m.reorder, bs[0] ? fdate(bs[0].expiry) : '-', low ? '<span class="badge bad">Low stock</span>' : '<span class="badge ok">OK</span>']; }))}</div>`;
+  if (tab === 'batches') body = `<div class="card">${table(['Medicine', 'Batch', 'Expiry', 'Qty', 'Status'], db.batches.slice().sort((a, b) => a.expiry.localeCompare(b.expiry)).map(b => { const d = Math.round((new Date(b.expiry) - TODAY) / 864e5); return [esc(byId(db.medicines, b.med).name), `<span class="mono">${esc(b.batchNo)}</span>`, fdate(b.expiry), b.qty, d < 0 ? '<span class="badge bad">Expired</span>' : d <= 60 ? `<span class="badge warn">Expires in ${d} days</span>` : '<span class="badge ok">Valid</span>']; }))}</div>`;
+  if (tab === 'sales') body = `<div class="card"><div class="ch"><h3>Dispensing and sales</h3><button class="btn s p" onclick="A.otc()">New counter sale</button></div>${table(['Sale', 'Date', 'Patient / customer', 'Items', 'Amount', 'Billing'], db.sales.slice().reverse().map(s => [`<span class="mono">${s.id}</span>`, fdate(s.date), s.patient ? pLink(s.patient) : esc(s.customer), esc(s.lines.map(l => l.name + ' x' + l.qty).join(', ')), money(s.total), s.rx ? '<span class="badge info">Added to invoice</span>' : '<span class="badge ok">Paid at counter</span>']), 'No sales yet', 'Dispense a prescription or make a counter sale.')}</div>`;
+  if (tab === 'suppliers') body = `<div class="card">${table(['Supplier', 'Type', 'Phone', 'Medicines supplied'], db.suppliers.filter(s => s.type === 'Medicine').map(s => [esc(s.name), s.type, esc(s.phone), db.medicines.filter(m => m.supplier === s.id).length]))}</div>`;
+  return `<div class="head"><div><h1>Pharmacy</h1><p>Batch and expiry tracking, prescription dispensing and counter sales.</p></div></div>${tabs([['dispense', 'Dispense (' + db.prescriptions.filter(x => x.status === 'Pending').length + ')'], ['stock', 'Stock'], ['batches', 'Batches and expiry'], ['sales', 'Sales'], ['suppliers', 'Suppliers']], tab, 'A.phtab')}${body}`;
+};
+def('phtab', t => { ST.phtab = t; render(); });
+/* takes stock from the earliest-expiring valid batches first; returns false if not enough */
+function takeStock(medId, qty, commitIt) {
+  const bs = db.batches.filter(b => b.med === medId && b.qty > 0 && b.expiry >= todayStr()).sort((a, b) => a.expiry.localeCompare(b.expiry)); let need = qty; const plan = [];
+  for (const b of bs) { const t = Math.min(b.qty, need); if (t > 0) { plan.push([b, t]); need -= t; } if (!need) break; }
+  if (need > 0) return false; if (commitIt) plan.forEach(([b, t]) => b.qty -= t); return true;
+}
+def('dispense', id => {
+  need('rx.dispense'); const x = byId(db.prescriptions, id); const p = P(x.patient);
+  const rows = x.items.map(i => { const m = byId(db.medicines, i.med); const have = medStock(m.id); return { m, i, have, ok:have >= i.qty }; });
+  openModal({ title:'Dispense ' + id, wide:true, noFocus:true, body:`<p><b>${esc(p.name)}</b> (${p.id}) | Allergy on file: <b>${esc(p.allergies)}</b></p>${table(['Medicine', 'Prescribed', 'In stock', 'Price', 'Amount', ''], rows.map(r => [esc(r.m.name), r.i.qty + ' (' + esc(r.i.freq) + ', ' + r.i.days + ' days)', r.have, money(r.m.price), money(r.m.price * r.i.qty), r.ok ? '<span class="badge ok">Available</span>' : '<span class="badge bad">Short by ' + (r.i.qty - r.have) + '</span>']))}<div class="note" style="margin-top:12px">Stock is taken from the batch that expires first. The amount is added to this patient's invoice.</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" ${rows.every(r => r.ok) ? '' : 'disabled'} onclick="A.doDispense('${id}')">Confirm dispensing</button>` });
+});
+def('doDispense', id => {
+  need('rx.dispense'); const x = byId(db.prescriptions, id); if (x.status !== 'Pending') throw new VErr('This prescription was already dispensed.');
+  for (const i of x.items) if (!takeStock(i.med, i.qty, false)) throw new VErr('Not enough stock for ' + byId(db.medicines, i.med).name + '.');
+  const lines = x.items.map(i => { takeStock(i.med, i.qty, true); const m = byId(db.medicines, i.med); return { med:m.id, name:m.name, qty:i.qty, price:m.price }; });
+  const s = { id:nextId(db, 'sale'), date:todayStr(), patient:x.patient, rx:x.id, visit:x.visit, lines, total:sum(lines, l => l.qty * l.price) }; db.sales.push(s); x.status = 'Dispensed';
+  audit('Prescription dispensed', x.id + ' ' + money(s.total)); closeModal(); ST.phtab = 'dispense'; commit('Dispensed ' + x.id + '. Stock updated. ' + money(s.total) + ' added to billing.');
+  lowMeds().filter(m => lines.some(l => l.med === m.id)).forEach(m => toast('Low stock alert: ' + m.name, 'err'));
+});
+def('otc', () => { need('rx.dispense'); openModal({ title:'Counter sale', body:`<div id="of" class="form">${field('Customer name', '<input name="customer" value="Walk-in customer">', 'full')}${field('Medicine *', `<select name="med">${opt(db.medicines, m => m.id, m => m.name + ' - ' + money(m.price) + ' (stock ' + medStock(m.id) + ')')}</select>`, 'full')}${field('Quantity *', '<input name="qty" type="number" min="1" value="1">')}${field('Payment method (simulated)', '<select name="method"><option>Cash</option><option>UPI</option><option>Card</option></select>')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveOtc()">Complete sale</button>` }); });
+def('saveOtc', () => { need('rx.dispense'); const f = fv('of'); const q = +f.qty; if (!(q > 0)) throw new VErr('Enter a quantity.'); const m = byId(db.medicines, f.med); if (!takeStock(m.id, q, true)) throw new VErr('Only ' + medStock(m.id) + ' of ' + m.name + ' in stock.'); const s = { id:nextId(db, 'sale'), date:todayStr(), patient:null, customer:f.customer || 'Walk-in customer', rx:null, lines:[{ med:m.id, name:m.name, qty:q, price:m.price }], total:q * m.price }; db.sales.push(s); db.payments.push({ id:nextId(db, 'pay'), invoice:null, sale:s.id, amount:s.total, method:f.method, at:todayStr(), ref:'SIM-' + Math.floor(100000 + Math.random() * 899999), type:'payment' }); audit('Counter sale', s.id); closeModal(); ST.phtab = 'sales'; commit('Sale ' + s.id + ' complete: ' + money(s.total) + ' (simulated ' + f.method + ')'); });
+def('addBatch', () => { need('pharm.stock'); openModal({ title:'Add stock batch', body:`<div id="bf" class="form">${field('Medicine *', `<select name="med">${opt(db.medicines, m => m.id, m => m.name)}</select>`, 'full')}${field('Batch number *', '<input name="batchNo">')}${field('Expiry date *', `<input type="date" name="expiry" min="${addDays(1)}">`)}${field('Quantity *', '<input type="number" name="qty" min="1">')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveBatch()">Add to stock</button>` }); });
+def('saveBatch', () => { need('pharm.stock'); const f = fv('bf'); if (!f.batchNo) throw new VErr('Enter the batch number.'); if (!f.expiry) throw new VErr('Enter an expiry date.'); if (!(+f.qty > 0)) throw new VErr('Enter a quantity.'); db.batches.push({ id:'B' + f.med + Date.now(), med:f.med, batchNo:f.batchNo, expiry:f.expiry, qty:+f.qty }); audit('Pharmacy batch added', f.batchNo); closeModal(); ST.phtab = 'stock'; commit('Batch ' + f.batchNo + ' added'); });
+
+/* ---------------- inventory ---------------- */
+VIEWS.inventory = () => {
+  const tab = ST.vtab || 'items'; let body = '';
+  const sup = id => (byId(db.suppliers, id) || {}).name || '-';
+  if (tab === 'items') body = `<div class="card"><div class="ch"><h3>Supplies and equipment</h3>${can('inv.manage') ? `<button class="btn s p" onclick="A.newItem()">Add item</button>` : ''}</div>${table(['Item ID', 'Item', 'Category', 'In stock', 'Minimum', 'Status', ''], db.items.map(i => [`<span class="mono">${i.id}</span>`, `<b>${esc(i.name)}</b>`, esc(i.category), `<b class="mono">${i.qty}</b> ${esc(i.unit)}`, i.min, i.qty <= i.min ? '<span class="badge bad">Reorder</span>' : '<span class="badge ok">OK</span>', `<div class="row"><button class="btn s" onclick="A.itemLabel('${i.id}')">QR label</button>${can('inv.manage') ? `<button class="btn s" onclick="A.stockMove('${i.id}','in')">Stock in</button><button class="btn s" onclick="A.stockMove('${i.id}','out')">Issue</button>` : ''}</div>`]))}</div>`;
+  if (tab === 'moves') body = `<div class="card">${table(['Date', 'Item', 'Movement', 'Qty', 'Department / reference', 'By'], db.stockMoves.slice().reverse().slice(0, 100).map(m => [fdate(m.at), esc((byId(db.items, m.item) || {}).name), m.type === 'in' ? '<span class="badge ok">Stock in</span>' : '<span class="badge warn">Issued</span>', m.qty, esc(m.dept || m.ref), esc(m.by)]), 'No movements yet')}</div>`;
+  if (tab === 'po') body = `<div class="card"><div class="ch"><h3>Purchase orders</h3>${can('inv.manage') ? `<button class="btn s p" onclick="A.newPO()">New purchase order</button>` : ''}</div>${table(['PO', 'Date', 'Supplier', 'Items', 'Total', 'Status', ''], db.pos.slice().reverse().map(p => [`<span class="mono">${p.id}</span>`, fdate(p.at), esc(sup(p.supplier)), esc(p.lines.map(l => (byId(db.items, l.item) || {}).name + ' x' + l.qty).join(', ')), money(p.total), badge(p.status), p.status === 'Ordered' && can('inv.manage') ? `<button class="btn s p" onclick="A.receivePO('${p.id}')">Mark received</button>` : '']), 'No purchase orders')}</div>`;
+  if (tab === 'sup') body = `<div class="card">${table(['Supplier', 'Type', 'Phone'], db.suppliers.map(s => [esc(s.name), s.type, esc(s.phone)]))}</div>`;
+  return `<div class="head"><div><h1>Inventory</h1><p>Hospital supplies and equipment, with department-wise issues and a full movement history.</p></div></div>${tabs([['items', 'Items'], ['moves', 'Movement history'], ['po', 'Purchase orders'], ['sup', 'Suppliers']], tab, 'A.vtab')}${body}`;
+};
+def('vtab', t => { ST.vtab = t; render(); });
+const mvId = () => 'MV' + String(db.seq.mv = (db.seq.mv || 0) + 1).padStart(5, '0');
+def('itemLabel', id => { const i = byId(db.items, id); openModal({ title:'Inventory label', noFocus:true, body:`<div class="idcard" style="width:300px"><div class="top">${roseSvg(26)}<div><b>${esc(db.hospital.name)}</b><span>Inventory label (demo)</span></div></div><div class="mid"><div class="qr" style="width:96px;height:96px">${qrSvg('WR://item/' + i.id)}</div><div><div class="pid mono" style="font-size:15px">${i.id}</div><div class="b">${esc(i.name)}</div><div class="sm mut">${esc(i.category)}</div></div></div></div>`, footer:`<button class="btn n" onclick="window.print()">Print label</button>` }); });
+def('stockMove', (id, type) => { need('inv.manage'); const i = byId(db.items, id); openModal({ title:(type === 'in' ? 'Stock in: ' : 'Issue: ') + i.name, body:`<p class="mut" style="margin-top:0">Current stock: <b>${i.qty} ${esc(i.unit)}</b></p><div id="mf" class="form">${field('Quantity *', '<input name="qty" type="number" min="1">')}${type === 'out' ? field('Issue to department *', `<select name="dept">${opt(db.departments, d => d.name, d => d.name)}<option>ICU</option><option>Operation theatre</option><option>Laboratory</option><option>Pharmacy</option></select>`) : field('Reference', '<input name="ref" placeholder="Invoice or note">')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveMove('${id}','${type}')">${type === 'in' ? 'Add stock' : 'Issue stock'}</button>` }); });
+def('saveMove', (id, type) => { need('inv.manage'); const f = fv('mf'); const q = +f.qty; const i = byId(db.items, id); if (!(q > 0)) throw new VErr('Enter a quantity.'); if (type === 'out' && q > i.qty) throw new VErr('Only ' + i.qty + ' ' + i.unit + ' in stock. You cannot issue more than that.'); i.qty += type === 'in' ? q : -q; db.stockMoves.push({ id:mvId(), item:id, type, qty:q, dept:type === 'out' ? f.dept : '', ref:f.ref || '', by:session.name, at:todayStr() }); audit('Inventory ' + type, i.name + ' x' + q); closeModal(); commit((type === 'in' ? 'Added ' : 'Issued ') + q + ' ' + i.unit + ' of ' + i.name + '. Now ' + i.qty); });
+def('newItem', () => { need('inv.manage'); openModal({ title:'Add inventory item', body:`<div id="nf" class="form">${field('Item name *', '<input name="name">', 'full')}${field('Category', '<select name="category"><option>Consumables</option><option>Equipment</option><option>Linen</option><option>Office</option></select>')}${field('Unit', '<input name="unit" value="pcs">')}${field('Opening quantity', '<input name="qty" type="number" value="0">')}${field('Minimum level', '<input name="min" type="number" value="10">')}${field('Supplier', `<select name="supplier">${opt(db.suppliers, s => s.id, s => s.name)}</select>`, 'full')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveItem()">Add item</button>` }); });
+def('saveItem', () => { need('inv.manage'); const f = fv('nf'); if (f.name.length < 3) throw new VErr('Enter the item name.'); const i = { id:nextId(db, 'inv'), name:f.name, category:f.category, unit:f.unit || 'pcs', qty:+f.qty || 0, min:+f.min || 0, supplier:f.supplier }; db.items.push(i); audit('Inventory item added', i.id); closeModal(); commit('Item ' + i.id + ' added'); });
+def('newPO', () => { need('inv.manage'); openModal({ title:'New purchase order', body:`<div id="pf2" class="form">${field('Supplier *', `<select name="supplier">${opt(db.suppliers, s => s.id, s => s.name)}</select>`, 'full')}${field('Item *', `<select name="item">${opt(db.items, i => i.id, i => i.name)}</select>`, 'full')}${field('Quantity *', '<input type="number" name="qty" min="1">')}${field('Unit cost *', '<input type="number" name="cost" min="0" step="0.5">')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.savePO()">Place order</button>` }); });
+def('savePO', () => { need('inv.manage'); const f = fv('pf2'); if (!(+f.qty > 0) || !(+f.cost > 0)) throw new VErr('Enter a quantity and a unit cost.'); const p = { id:nextId(db, 'po'), supplier:f.supplier, status:'Ordered', at:todayStr(), lines:[{ item:f.item, qty:+f.qty, cost:+f.cost }], total:+f.qty * +f.cost }; db.pos.push(p); audit('Purchase order placed', p.id); closeModal(); commit('Purchase order ' + p.id + ' placed'); });
+def('receivePO', id => { need('inv.manage'); const p = byId(db.pos, id); if (p.status !== 'Ordered') throw new VErr('This order was already received.'); p.lines.forEach(l => { byId(db.items, l.item).qty += l.qty; db.stockMoves.push({ id:mvId(), item:l.item, type:'in', qty:l.qty, dept:'', ref:p.id, by:session.name, at:todayStr() }); }); p.status = 'Received'; audit('Purchase order received', id); commit(id + ' received and stock updated'); });
+
+/* ---------------- billing ---------------- */
+VIEWS.billing = () => {
+  const tab = ST.btab || 'invoices'; const flt = ST.bflt || 'All'; let body = '';
+  if (tab === 'invoices') { const l = db.invoices.filter(i => flt === 'All' || (flt === 'Outstanding' ? balance(i) > 0 : i.status === flt)).sort((a, b) => b.id.localeCompare(a.id));
+    body = `<div class="pills" style="margin-bottom:12px">${['All', 'Paid', 'Partial', 'Pending', 'Outstanding'].map(s => `<button class="pill ${flt === s ? 'on' : ''}" onclick="ST.bflt='${s}';render()">${s}</button>`).join('')}</div><div class="card">${table(['Invoice', 'Patient', 'Date', 'Total', 'Paid', 'Balance', 'Status', ''], l.slice(0, 80).map(i => [`<span class="mono b">${i.id}</span>`, pLink(i.patient), fdate(i.date), money(net(i)), money(i.paid - i.refunded), money(balance(i)), badge(i.status), `<button class="btn s" onclick="A.invoice('${i.id}')">Open</button>`]), 'No invoices match')}</div>`; }
+  if (tab === 'ready') { const vs = db.visits.filter(v => !db.invoices.some(i => i.visit === v.id)); const as = db.admissions.filter(a => !db.invoices.some(i => i.admission === a.id));
+    body = `<div class="card"><div class="ch"><h3>Consultations not billed (${vs.length})</h3></div>${table(['Visit', 'Patient', 'Doctor', 'Date', ''], vs.map(v => [`<span class="mono">${v.id}</span>`, pLink(v.patient), esc(DOC(v.doctor).name), fdate(v.date), can('bill.create') ? `<button class="btn s p" onclick="A.genInvoice('${v.id}')">Generate invoice</button>` : '']), 'Everything is billed', 'New consultations appear here until an invoice is created.')}</div>
+    <div class="card" style="margin-top:16px"><div class="ch"><h3>Admissions not billed (${as.length})</h3></div>${table(['Admission', 'Patient', 'Bed', 'Status', ''], as.map(a => [`<span class="mono">${a.id}</span>`, pLink(a.patient), esc(bedName(a.bed)), badge(a.status), can('bill.create') ? `<button class="btn s p" onclick="A.admInvoice('${a.id}')">Generate invoice</button>` : '']), 'No admissions waiting')}</div>`; }
+  if (tab === 'daily') { const d = ST.bday || todayStr(); const ps = db.payments.filter(p => p.at === d); const meth = ['Cash', 'UPI', 'Card', 'Bank transfer'].map(m => ({ m, t:sum(ps.filter(p => p.method === m), p => p.type === 'refund' ? -p.amount : p.amount) }));
+    body = `<div class="row" style="margin-bottom:12px"><label style="width:200px">Date<input type="date" value="${d}" onchange="ST.bday=this.value;render()"></label><button class="btn" style="align-self:flex-end" onclick="A.exportDaily()">Export CSV</button></div>
+    <div class="grid g4" style="margin-bottom:16px">${meth.map(x => `<div class="card kpi n2"><span class="n mono">${money(x.t)}</span><span class="l">${x.m}</span></div>`).join('')}</div><div class="card"><div class="ch"><h3>Total collected: ${money(collectionsOn(d))}</h3></div>${table(['Receipt', 'Invoice / sale', 'Method', 'Reference', 'Type', 'Amount'], ps.map(p => [`<span class="mono">${p.id}</span>`, esc(p.invoice || p.sale || '-'), esc(p.method), `<span class="mono sm">${esc(p.ref)}</span>`, p.type === 'refund' ? '<span class="badge warn">Refund</span>' : 'Payment', (p.type === 'refund' ? '-' : '') + money(p.amount)]), 'No payments on this date')}</div>`; }
+  if (tab === 'refunds') body = `<div class="card">${table(['Receipt', 'Invoice', 'Date', 'Method', 'Amount'], db.payments.filter(p => p.type === 'refund').map(p => [`<span class="mono">${p.id}</span>`, esc(p.invoice), fdate(p.at), esc(p.method), money(p.amount)]), 'No refunds recorded')}</div>`;
+  return `<div class="head"><div><h1>Billing and accounts</h1><p>Outstanding: <b>${money(sum(db.invoices, balance))}</b> | Today: <b>${money(collectionsOn(todayStr()))}</b>. All payments are simulated.</p></div></div>${tabs([['invoices', 'Invoices'], ['ready', 'Ready to bill'], ['daily', 'Daily collection'], ['refunds', 'Refunds']], tab, 'A.btab')}${body}`;
+};
+def('btab', t => { ST.btab = t; render(); });
+function buildLines(v) {
+  const d = DOC(v.doctor); const lines = [{ desc:'Consultation - ' + d.name, cat:'Consultation', qty:1, price:d.fee }];
+  db.labOrders.filter(l => l.visit === v.id).forEach(l => l.tests.forEach(t => lines.push({ desc:'Lab: ' + t.name, cat:'Laboratory', qty:1, price:t.price })));
+  db.sales.filter(s => s.visit === v.id).forEach(s => s.lines.forEach(l => lines.push({ desc:'Pharmacy: ' + l.name + ' x' + l.qty, cat:'Pharmacy', qty:1, price:l.qty * l.price })));
+  return lines;
+}
+def('genInvoice', vid => {
+  need('bill.create'); const v = byId(db.visits, vid); let inv = db.invoices.find(i => i.visit === vid);
+  if (inv) { inv.lines = buildLines(v); inv.total = sum(inv.lines, l => l.qty * l.price); refreshInvoice(inv); audit('Invoice synced', inv.id); save(); render(); return A.invoice(inv.id); }
+  const lines = buildLines(v); inv = { id:nextId(db, 'bill'), patient:v.patient, visit:vid, admission:null, date:todayStr(), lines, discount:0, total:sum(lines, l => l.qty * l.price), paid:0, refunded:0, status:'Pending', createdBy:session.name };
+  db.invoices.push(inv); audit('Invoice generated', inv.id); save(); render(); toast('Invoice ' + inv.id + ' generated: ' + money(inv.total), 'ok'); A.invoice(inv.id);
+});
+def('admInvoice', aid => {
+  need('bill.create'); const a = byId(db.admissions, aid); const lines = [];
+  a.history.forEach(h => { const b = BED(h.bed); const w = byId(db.wards, b.ward); const d = stayDays(h); lines.push({ desc:'Room charge: ' + w.name + ' / ' + b.label + ' (' + d + ' day' + (d > 1 ? 's' : '') + ' x ' + money(b.rate) + ')', cat:'Room', qty:1, price:d * b.rate }); });
+  const days = sum(a.history, stayDays); lines.push({ desc:'Doctor visits (' + days + ' days x ' + money(600) + ')', cat:'Consultation', qty:1, price:days * 600 }, { desc:'Nursing care (' + days + ' days x ' + money(400) + ')', cat:'Nursing', qty:1, price:days * 400 });
+  let inv = db.invoices.find(i => i.admission === aid);
+  if (inv) { inv.lines = lines; inv.total = sum(lines, l => l.price); refreshInvoice(inv); } else { inv = { id:nextId(db, 'bill'), patient:a.patient, visit:null, admission:aid, date:todayStr(), lines, discount:0, total:sum(lines, l => l.price), paid:0, refunded:0, status:'Pending', createdBy:session.name }; db.invoices.push(inv); }
+  audit('Admission invoice', inv.id); save(); closeModal(); render(); toast('Invoice ' + inv.id + ': ' + money(inv.total), 'ok'); A.invoice(inv.id);
+});
+def('invoice', id => {
+  const i = byId(db.invoices, id); const p = P(i.patient); const pays = db.payments.filter(x => x.invoice === id); const bal = balance(i);
+  openModal({ title:'Invoice ' + id, wide:true, noFocus:true, body:`<div class="doc">${docHead('Invoice ' + id)}<p><b>${esc(p.name)}</b> (${p.id}) | ${age(p.dob)} yrs, ${esc(p.gender)} | ${fdate(i.date)}</p>
+    <table><tr><th>Description</th><th>Category</th><th class="r">Amount</th></tr>${i.lines.map(l => `<tr><td>${esc(l.desc)}</td><td>${esc(l.cat)}</td><td class="r">${money(l.qty * l.price)}</td></tr>`).join('')}</table>
+    <table class="tot"><tr><td>Subtotal</td><td class="r">${money(i.total)}</td></tr>${i.discount ? `<tr><td>Discount</td><td class="r">-${money(i.discount)}</td></tr>` : ''}<tr><td><b>Net amount</b></td><td class="r"><b>${money(net(i))}</b></td></tr><tr><td>Paid</td><td class="r">${money(i.paid)}</td></tr>${i.refunded ? `<tr><td>Refunded</td><td class="r">${money(i.refunded)}</td></tr>` : ''}<tr><td><b>Balance due</b></td><td class="r"><b>${money(bal)}</b></td></tr></table>
+    ${pays.length ? `<b>Payments</b><table><tr><th>Receipt</th><th>Date</th><th>Method</th><th>Reference</th><th class="r">Amount</th></tr>${pays.map(x => `<tr><td>${x.id}</td><td>${fdate(x.at)}</td><td>${esc(x.method)}</td><td>${esc(x.ref)}</td><td class="r">${x.type === 'refund' ? '-' : ''}${money(x.amount)}</td></tr>`).join('')}</table>` : ''}
+    <p class="sm">Status: <b>${i.status}</b>. ${esc(db.hospital.invoiceNote)} GSTIN: ${esc(db.hospital.gstin)}</p>${docFoot}</div>`,
+    footer:`${bal > 0 && can('bill.pay') ? `<button class="btn p" onclick="A.pay('${id}')">Record payment</button>` : ''}${i.paid - i.refunded > 0 && can('bill.refund') ? `<button class="btn d" onclick="A.refund('${id}')">Refund</button>` : ''}${can('bill.create') && i.visit && !i.paid ? `<button class="btn" onclick="A.genInvoice('${i.visit}')">Sync charges</button>` : ''}<button class="btn n" onclick="window.print()">Print / Save as PDF</button>` });
+});
+def('pay', id => { need('bill.pay'); const i = byId(db.invoices, id); const bal = balance(i); openModal({ title:'Record payment (simulated)', body:`<div class="note warn" style="margin-bottom:12px">Demo only. No real money moves and no payment gateway is called.</div><p>Balance due on ${id}: <b>${money(bal)}</b></p><div id="pyf" class="form">${field('Amount *', `<input name="amount" type="number" min="1" max="${bal}" step="0.01" value="${bal}">`)}${field('Method *', '<select name="method"><option>Cash</option><option>UPI</option><option>Card</option><option>Bank transfer</option></select>')}</div>`, footer:`<button class="btn" onclick="closeModal();A.invoice('${id}')">Back</button><button class="btn p" onclick="A.savePay('${id}')">Record payment</button>` }); });
+def('savePay', id => { need('bill.pay'); const f = fv('pyf'); const i = byId(db.invoices, id); const amt = Math.round(+f.amount * 100) / 100; const bal = balance(i); if (!(amt > 0)) throw new VErr('Enter an amount.'); if (amt > bal + 0.001) throw new VErr('The amount is more than the balance of ' + money(bal) + '.'); const pm = { id:nextId(db, 'pay'), invoice:id, amount:amt, method:f.method, at:todayStr(), ref:'SIM-' + Math.floor(100000 + Math.random() * 899999), type:'payment' }; db.payments.push(pm); i.paid += amt; refreshInvoice(i); audit('Payment recorded (simulated)', id + ' ' + money(amt) + ' ' + f.method); save(); render(); toast('Receipt ' + pm.id + ': ' + money(amt) + ' via ' + f.method + ' (simulated)', 'ok'); A.invoice(id); });
+def('refund', id => { need('bill.refund'); const i = byId(db.invoices, id); const max = i.paid - i.refunded; openModal({ title:'Refund (simulated)', body:`<p>Refundable on ${id}: <b>${money(max)}</b></p><div id="rff" class="form">${field('Amount *', `<input name="amount" type="number" min="1" max="${max}" value="${max}">`)}${field('Method', '<select name="method"><option>Cash</option><option>UPI</option><option>Card</option><option>Bank transfer</option></select>')}${field('Reason *', '<input name="why">', 'full')}</div>`, footer:`<button class="btn" onclick="closeModal();A.invoice('${id}')">Back</button><button class="btn d" onclick="A.saveRefund('${id}')">Record refund</button>` }); });
+def('saveRefund', id => { need('bill.refund'); const f = fv('rff'); const i = byId(db.invoices, id); const amt = +f.amount; if (!f.why) throw new VErr('Enter a reason for the refund.'); if (!(amt > 0) || amt > i.paid - i.refunded) throw new VErr('Refund must be more than 0 and not more than ' + money(i.paid - i.refunded) + '.'); db.payments.push({ id:nextId(db, 'pay'), invoice:id, amount:amt, method:f.method, at:todayStr(), ref:f.why, type:'refund' }); i.refunded += amt; refreshInvoice(i); audit('Refund recorded', id + ' ' + money(amt)); save(); render(); toast('Refund of ' + money(amt) + ' recorded', 'ok'); A.invoice(id); });
+def('exportDaily', () => { const d = ST.bday || todayStr(); downloadCSV('daily-collection-' + d + '.csv', ['Receipt', 'Invoice/Sale', 'Method', 'Reference', 'Type', 'Amount'], db.payments.filter(p => p.at === d).map(p => [p.id, p.invoice || p.sale, p.method, p.ref, p.type, p.amount])); });
+
+/* ---------------- reports ---------------- */
+const REPORTS = {
+  appts:{ t:'Patients and appointments', b:() => ({ cols:['Appointment', 'Date', 'Patient ID', 'Patient', 'Doctor', 'Department', 'Type', 'Status'], rows:db.appointments.slice().sort((a, b) => b.date.localeCompare(a.date)).map(a => [a.id, a.date, a.patient, P(a.patient).name, DOC(a.doctor).name, deptName(DOC(a.doctor).dept), a.type, a.status]) }) },
+  adm:{ t:'Admissions and discharges', b:() => ({ cols:['Admission', 'Patient ID', 'Patient', 'Doctor', 'Bed', 'Admitted', 'Discharged', 'Status'], rows:db.admissions.map(a => [a.id, a.patient, P(a.patient).name, DOC(a.doctor).name, bedName(a.bed), a.admittedAt, a.dischargedAt || '', a.status]) }) },
+  occ:{ t:'Bed occupancy', b:() => ({ cols:['Ward', 'Total beds', 'Occupied', 'Available', 'Maintenance', 'Occupancy %'], rows:db.wards.map(w => { const bs = db.beds.filter(b => b.ward === w.id); const o = bs.filter(b => b.status === 'occupied').length; return [w.name, bs.length, o, bs.filter(b => b.status === 'free').length, bs.filter(b => b.status === 'maintenance').length, Math.round(100 * o / bs.length)]; }) }) },
+  rev:{ t:'Revenue and collections', b:() => ({ cols:['Date', 'Receipts', 'Collected (INR)'], rows:[...Array(14)].map((_, i) => addDays(i - 13)).map(d => [d, db.payments.filter(p => p.at === d).length, collectionsOn(d)]) }) },
+  out:{ t:'Outstanding bills', b:() => ({ cols:['Invoice', 'Date', 'Patient ID', 'Patient', 'Net (INR)', 'Paid (INR)', 'Balance (INR)', 'Status'], rows:db.invoices.filter(i => balance(i) > 0).map(i => [i.id, i.date, i.patient, P(i.patient).name, net(i), i.paid - i.refunded, balance(i), i.status]) }) },
+  ph:{ t:'Pharmacy stock and expiry', b:() => ({ cols:['Medicine', 'Batch', 'Expiry', 'Qty', 'Status'], rows:db.batches.slice().sort((a, b) => a.expiry.localeCompare(b.expiry)).map(b => { const m = byId(db.medicines, b.med); return [m.name, b.batchNo, b.expiry, b.qty, b.expiry < todayStr() ? 'Expired' : b.expiry <= addDays(60) ? 'Expiring' : medStock(m.id) <= m.reorder ? 'Low stock' : 'OK']; }) }) },
+  lab:{ t:'Laboratory order status', b:() => ({ cols:['Order', 'Date', 'Patient ID', 'Patient', 'Tests', 'Status'], rows:db.labOrders.map(l => [l.id, l.date, l.patient, P(l.patient).name, l.tests.map(t => t.name).join('; '), l.status]) }) },
+};
+VIEWS.reports = () => {
+  const k = ST.rep || 'appts'; const r = REPORTS[k].b();
+  return `<div class="head"><div><h1>Reports</h1><p>Every report can be exported to CSV or printed.</p></div><div class="row"><button class="btn" onclick="A.exportRep()">Export CSV</button><button class="btn n" onclick="A.printRep()">Print</button></div></div>
+  <div class="pills" style="margin-bottom:14px">${Object.entries(REPORTS).map(([id, x]) => `<button class="pill ${k === id ? 'on' : ''}" onclick="ST.rep='${id}';render()">${esc(x.t)}</button>`).join('')}</div>
+  <div class="card"><div class="ch"><h3>${esc(REPORTS[k].t)}</h3><span class="sm mut">${r.rows.length} rows</span></div>${table(r.cols, r.rows.slice(0, 200).map(x => x.map(c => esc(c))), 'No data for this report')}</div>`;
+};
+def('exportRep', () => { const k = ST.rep || 'appts'; const r = REPORTS[k].b(); downloadCSV(k + '-report-' + todayStr() + '.csv', r.cols, r.rows); audit('Report exported', REPORTS[k].t); });
+def('printRep', () => { const k = ST.rep || 'appts'; const r = REPORTS[k].b(); showDoc(REPORTS[k].t, `${docHead(REPORTS[k].t)}<table><tr>${r.cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${r.rows.slice(0, 200).map(x => `<tr>${x.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table>`); });
+
+/* ---------------- audit log ---------------- */
+VIEWS.audit = () => `<div class="head"><div><h1>Audit log</h1><p>Who did what, and when. Access denials are recorded too.</p></div><button class="btn" onclick="A.go('audit')">Refresh</button></div><div class="card">${table(['Time', 'User', 'Role', 'Action', 'Detail'], db.audit.slice(0, 200).map(a => [new Date(a.at).toLocaleString('en-IN'), esc(a.user), esc(a.role), `<b>${esc(a.action)}</b>`, esc(a.detail)]), 'No activity recorded')}</div>`;
+</script>
+</body></html>
