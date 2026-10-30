@@ -64,6 +64,7 @@ function buildSeed() {
     ['Dr. Kiran Gokhale','General Medicine','MBBS, DNB',500,'Mon-Sat'],
   ];
   db.doctors = docs.map((d,i)=>({ id:'D'+(i+1), staffId:null, name:d[0], dept:dn(d[1]), qual:d[2], fee:d[3], days:d[4], slots:i%2?'10:00-16:00':'09:00-14:00', room:'OPD-'+(101+i), active:true }));
+  db.seq.doctor = db.doctors.length; /* doctors use the short D1..Dn form, kept in the same counter store */
 
   const staffRows = [
     ['Dr. Meera Kulkarni','admin','Administration','Day'],['Pooja Shinde','reception','Front desk','Day'],['Ankita More','reception','Front desk','Evening'],

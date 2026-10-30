@@ -2533,6 +2533,7 @@ function buildSeed() {
     ['Dr. Kiran Gokhale','General Medicine','MBBS, DNB',500,'Mon-Sat'],
   ];
   db.doctors = docs.map((d,i)=>({ id:'D'+(i+1), staffId:null, name:d[0], dept:dn(d[1]), qual:d[2], fee:d[3], days:d[4], slots:i%2?'10:00-16:00':'09:00-14:00', room:'OPD-'+(101+i), active:true }));
+  db.seq.doctor = db.doctors.length; /* doctors use the short D1..Dn form, kept in the same counter store */
 
   const staffRows = [
     ['Dr. Meera Kulkarni','admin','Administration','Day'],['Pooja Shinde','reception','Front desk','Day'],['Ankita More','reception','Front desk','Evening'],
@@ -3117,12 +3118,50 @@ VIEWS.staff = () => {
   if (tab === 'doctors') body = table(['Doctor', 'Department', 'Qualification', 'Fee', 'Days / hours', 'Room', 'Staff ID'], db.doctors.map(d => [`<b>${esc(d.name)}</b>`, esc(deptName(d.dept)), esc(d.qual), money(d.fee), esc(d.days) + '<div class="sm mut">' + d.slots + '</div>', esc(d.room), `<span class="mono">${d.staffId}</span>`]));
   else if (tab === 'staff') body = table(['Staff ID', 'Name', 'Role', 'Department', 'Shift', 'Phone'], db.staff.map(s => [`<span class="mono">${s.id}</span>`, esc(s.name), esc(ROLES[s.role].label), esc(s.dept), esc(s.shift), esc(s.phone)]));
   else body = table(['Staff', 'Shift', ...days], db.staff.filter(s => s.role !== 'doctor').map((s, i) => [esc(s.name) + '<div class="sm mut">' + esc(ROLES[s.role].short) + '</div>', esc(s.shift), ...days.map((d, k) => (k + i) % 7 === 6 ? '<span class="mut">Off</span>' : `<span class="badge ${s.shift === 'Night' ? 'info' : 'teal'}">${s.shift[0]}</span>`)]));
-  return `<div class="head"><div><h1>Doctors and staff</h1><p>${db.doctors.length} doctors, ${db.staff.length - db.doctors.length} staff members</p></div><button class="btn p" onclick="A.newStaff()">Add staff member</button></div>
+  return `<div class="head"><div><h1>Doctors and staff</h1><p>${db.doctors.length} doctors, ${db.staff.length - db.doctors.length} staff members</p></div>
+  <div class="row">${can('staff.manage') ? `${tab === 'doctors' ? `<button class="btn p" onclick="A.newDoctor()">Add doctor</button>` : ''}<button class="btn ${tab === 'doctors' ? '' : 'p'}" onclick="A.newStaff()">Add staff member</button>` : ''}</div></div>
   ${tabs([['doctors', 'Doctors'], ['staff', 'All staff'], ['roster', 'Duty roster']], tab, 'A.stab')}<div class="card">${body}</div>`;
 };
 def('stab', t => { ST.stab = t; render(); });
-def('newStaff', () => { need('staff.manage'); openModal({ title:'Add staff member', body:`<div id="sf" class="form">${field('Full name *', '<input name="name">')}${field('Role *', `<select name="role">${Object.keys(ROLES).filter(r => r !== 'doctor').map(r => `<option value="${r}">${ROLES[r].label}</option>`).join('')}</select>`)}${field('Department', '<input name="dept">')}${field('Shift', '<select name="shift"><option>Day</option><option>Evening</option><option>Night</option></select>')}${field('Phone', '<input name="phone">')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveStaff()">Add staff member</button>` }); });
+def('newStaff', () => { need('staff.manage'); openModal({ title:'Add staff member', body:`<div class="note" style="margin-bottom:12px">To add a doctor, use <b>Add doctor</b> so they get a schedule, consultation fee and room.</div><div id="sf" class="form">${field('Full name *', '<input name="name">')}${field('Role *', `<select name="role">${Object.keys(ROLES).filter(r => r !== 'doctor').map(r => `<option value="${r}">${ROLES[r].label}</option>`).join('')}</select>`)}${field('Department', '<input name="dept">')}${field('Shift', '<select name="shift"><option>Day</option><option>Evening</option><option>Night</option></select>')}${field('Phone', '<input name="phone">')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveStaff()">Add staff member</button>` }); });
 def('saveStaff', () => { need('staff.manage'); const f = fv('sf'); if (f.name.length < 3) throw new VErr('Enter the staff member\'s name.'); const s = { id:nextId(db, 'staff'), name:f.name, role:f.role, dept:f.dept || '-', shift:f.shift, phone:f.phone || '-', active:true }; db.staff.push(s); audit('Staff added', s.id); closeModal(); commit('Added ' + s.name + ' as ' + s.id); });
+
+/* doctors are a separate list (schedule, fee, room) and also get a staff row */
+function nextDoctorId() {
+  db.seq.doctor = (db.seq.doctor || 0) + 1;
+  let id = 'D' + db.seq.doctor;
+  while (db.doctors.some(d => d.id === id)) { db.seq.doctor++; id = 'D' + db.seq.doctor; }
+  return id;
+}
+def('newDoctor', () => {
+  need('staff.manage');
+  const room = 'OPD-' + (101 + db.doctors.length);
+  openModal({ title:'Add doctor', wide:true, body:`<div id="docf" class="form">
+    ${field('Full name *', '<input name="name" placeholder="Dr. First Last">')}
+    ${field('Department *', `<select name="dept">${opt(db.departments, d => d.id, d => d.name)}</select>`)}
+    ${field('Qualification *', '<input name="qual" placeholder="e.g. MBBS, MD">')}
+    ${field('Consultation fee (INR) *', '<input name="fee" type="number" min="1" step="50" value="500">')}
+    ${field('OPD days *', `<select name="days">${['Mon-Sat', 'Mon-Fri', 'Tue-Sun', 'All days'].map(x => `<option>${x}</option>`).join('')}</select>`)}
+    ${field('Consultation hours *', '<input name="slots" value="09:00-14:00" placeholder="09:00-14:00">')}
+    ${field('Room', `<input name="room" value="${esc(room)}">`)}
+    ${field('Phone', '<input name="phone" inputmode="numeric" maxlength="10" placeholder="Optional">')}
+  </div><div class="note" style="margin-top:12px">Adding a doctor also creates their staff record, so they appear in the staff list and duty roster, and can be booked in Appointments.</div>`,
+    footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveDoctor()">Add doctor</button>` });
+});
+def('saveDoctor', () => {
+  need('staff.manage'); const f = fv('docf');
+  if (f.name.length < 4) throw new VErr('Enter the doctor\'s full name.');
+  if (!f.qual) throw new VErr('Enter the qualification.');
+  if (!(+f.fee > 0)) throw new VErr('Enter a consultation fee greater than 0.');
+  if (!/^\d{1,2}:\d{2}-\d{1,2}:\d{2}$/.test(f.slots)) throw new VErr('Enter consultation hours like 09:00-14:00.');
+  if (f.phone && !/^[6-9]\d{9}$/.test(f.phone)) throw new VErr('Enter a valid 10-digit mobile number, or leave it blank.');
+  if (db.doctors.some(d => d.name.toLowerCase() === f.name.toLowerCase())) throw new VErr('A doctor with this name is already on the list.');
+  const staffId = nextId(db, 'staff');
+  const d = { id:nextDoctorId(), staffId, name:f.name, dept:f.dept, qual:f.qual, fee:+f.fee, days:f.days, slots:f.slots, room:f.room || 'OPD-' + (101 + db.doctors.length), active:true };
+  db.doctors.push(d);
+  db.staff.push({ id:staffId, name:d.name, role:'doctor', dept:deptName(d.dept), shift:'OPD', phone:f.phone || '-', active:true });
+  audit('Doctor added', d.id + ' ' + d.name); closeModal(); ST.stab = 'doctors'; commit(d.name + ' added as ' + d.id + ' (' + deptName(d.dept) + ')');
+});
 
 /* ===== views 2: IPD/beds, laboratory, pharmacy, inventory, billing, reports, audit ===== */
 
@@ -3281,7 +3320,7 @@ def('receivePO', id => { need('inv.manage'); const p = byId(db.pos, id); if (p.s
 VIEWS.billing = () => {
   const tab = ST.btab || 'invoices'; const flt = ST.bflt || 'All'; let body = '';
   if (tab === 'invoices') { const l = db.invoices.filter(i => flt === 'All' || (flt === 'Outstanding' ? balance(i) > 0 : i.status === flt)).sort((a, b) => b.id.localeCompare(a.id));
-    body = `<div class="pills" style="margin-bottom:12px">${['All', 'Paid', 'Partial', 'Pending', 'Outstanding'].map(s => `<button class="pill ${flt === s ? 'on' : ''}" onclick="ST.bflt='${s}';render()">${s}</button>`).join('')}</div><div class="card">${table(['Invoice', 'Patient', 'Date', 'Total', 'Paid', 'Balance', 'Status', ''], l.slice(0, 80).map(i => [`<span class="mono b">${i.id}</span>`, pLink(i.patient), fdate(i.date), money(net(i)), money(i.paid - i.refunded), money(balance(i)), badge(i.status), `<button class="btn s" onclick="A.invoice('${i.id}')">Open</button>`]), 'No invoices match')}</div>`; }
+    body = `<div class="pills" style="margin-bottom:12px">${['All', 'Paid', 'Partial', 'Pending', 'Outstanding'].map(s => `<button class="pill ${flt === s ? 'on' : ''}" onclick="ST.bflt='${s}';render()">${s}</button>`).join('')}</div><div class="card">${table(['Invoice', 'Patient', 'Date', 'Total', 'Paid', 'Balance', 'Status', ''], l.slice(0, 80).map(i => [`<span class="mono b">${i.id}</span>`, billParty(i), fdate(i.date), money(net(i)), money(i.paid - i.refunded), money(balance(i)), badge(i.status), `<div class="row"><button class="btn s" onclick="A.invoice('${i.id}')">Open</button>${can('bill.create') ? `<button class="btn s" onclick="A.editBill('${i.id}')">Edit</button>` : ''}</div>`]), 'No invoices match')}</div>`; }
   if (tab === 'ready') { const vs = db.visits.filter(v => !db.invoices.some(i => i.visit === v.id)); const as = db.admissions.filter(a => !db.invoices.some(i => i.admission === a.id));
     body = `<div class="card"><div class="ch"><h3>Consultations not billed (${vs.length})</h3></div>${table(['Visit', 'Patient', 'Doctor', 'Date', ''], vs.map(v => [`<span class="mono">${v.id}</span>`, pLink(v.patient), esc(DOC(v.doctor).name), fdate(v.date), can('bill.create') ? `<button class="btn s p" onclick="A.genInvoice('${v.id}')">Generate invoice</button>` : '']), 'Everything is billed', 'New consultations appear here until an invoice is created.')}</div>
     <div class="card" style="margin-top:16px"><div class="ch"><h3>Admissions not billed (${as.length})</h3></div>${table(['Admission', 'Patient', 'Bed', 'Status', ''], as.map(a => [`<span class="mono">${a.id}</span>`, pLink(a.patient), esc(bedName(a.bed)), badge(a.status), can('bill.create') ? `<button class="btn s p" onclick="A.admInvoice('${a.id}')">Generate invoice</button>` : '']), 'No admissions waiting')}</div>`; }
@@ -3289,7 +3328,7 @@ VIEWS.billing = () => {
     body = `<div class="row" style="margin-bottom:12px"><label style="width:200px">Date<input type="date" value="${d}" onchange="ST.bday=this.value;render()"></label><button class="btn" style="align-self:flex-end" onclick="A.exportDaily()">Export CSV</button></div>
     <div class="grid g4" style="margin-bottom:16px">${meth.map(x => `<div class="card kpi n2"><span class="n mono">${money(x.t)}</span><span class="l">${x.m}</span></div>`).join('')}</div><div class="card"><div class="ch"><h3>Total collected: ${money(collectionsOn(d))}</h3></div>${table(['Receipt', 'Invoice / sale', 'Method', 'Reference', 'Type', 'Amount'], ps.map(p => [`<span class="mono">${p.id}</span>`, esc(p.invoice || p.sale || '-'), esc(p.method), `<span class="mono sm">${esc(p.ref)}</span>`, p.type === 'refund' ? '<span class="badge warn">Refund</span>' : 'Payment', (p.type === 'refund' ? '-' : '') + money(p.amount)]), 'No payments on this date')}</div>`; }
   if (tab === 'refunds') body = `<div class="card">${table(['Receipt', 'Invoice', 'Date', 'Method', 'Amount'], db.payments.filter(p => p.type === 'refund').map(p => [`<span class="mono">${p.id}</span>`, esc(p.invoice), fdate(p.at), esc(p.method), money(p.amount)]), 'No refunds recorded')}</div>`;
-  return `<div class="head"><div><h1>Billing and accounts</h1><p>Outstanding: <b>${money(sum(db.invoices, balance))}</b> | Today: <b>${money(collectionsOn(todayStr()))}</b>. All payments are simulated.</p></div></div>${tabs([['invoices', 'Invoices'], ['ready', 'Ready to bill'], ['daily', 'Daily collection'], ['refunds', 'Refunds']], tab, 'A.btab')}${body}`;
+  return `<div class="head"><div><h1>Billing and accounts</h1><p>Outstanding: <b>${money(sum(db.invoices, balance))}</b> | Today: <b>${money(collectionsOn(todayStr()))}</b>. All payments are simulated.</p></div><div class="row">${can('bill.create') ? `<button class="btn p" onclick="A.newBill()">Generate bill</button>` : ''}</div></div>${tabs([['invoices', 'Invoices'], ['ready', 'Ready to bill'], ['daily', 'Daily collection'], ['refunds', 'Refunds']], tab, 'A.btab')}${body}`;
 };
 def('btab', t => { ST.btab = t; render(); });
 function buildLines(v) {
@@ -3313,13 +3352,13 @@ def('admInvoice', aid => {
   audit('Admission invoice', inv.id); save(); closeModal(); render(); toast('Invoice ' + inv.id + ': ' + money(inv.total), 'ok'); A.invoice(inv.id);
 });
 def('invoice', id => {
-  const i = byId(db.invoices, id); const p = P(i.patient); const pays = db.payments.filter(x => x.invoice === id); const bal = balance(i);
-  openModal({ title:'Invoice ' + id, wide:true, noFocus:true, body:`<div class="doc">${docHead('Invoice ' + id)}<p><b>${esc(p.name)}</b> (${p.id}) | ${age(p.dob)} yrs, ${esc(p.gender)} | ${fdate(i.date)}</p>
+  const i = byId(db.invoices, id); const p = i.patient ? P(i.patient) : null; const pays = db.payments.filter(x => x.invoice === id); const bal = balance(i);
+  openModal({ title:'Invoice ' + id, wide:true, noFocus:true, body:`<div class="doc">${docHead('Invoice ' + id)}${p ? `<p><b>${esc(p.name)}</b> (${p.id}) | ${age(p.dob)} yrs, ${esc(p.gender)} | ${fdate(i.date)}</p>` : `<p><b>${esc(billName(i))}</b>${i.customerPhone ? ' | ' + esc(i.customerPhone) : ''} | Unregistered patient | ${fdate(i.date)}</p>`}
     <table><tr><th>Description</th><th>Category</th><th class="r">Amount</th></tr>${i.lines.map(l => `<tr><td>${esc(l.desc)}</td><td>${esc(l.cat)}</td><td class="r">${money(l.qty * l.price)}</td></tr>`).join('')}</table>
     <table class="tot"><tr><td>Subtotal</td><td class="r">${money(i.total)}</td></tr>${i.discount ? `<tr><td>Discount</td><td class="r">-${money(i.discount)}</td></tr>` : ''}<tr><td><b>Net amount</b></td><td class="r"><b>${money(net(i))}</b></td></tr><tr><td>Paid</td><td class="r">${money(i.paid)}</td></tr>${i.refunded ? `<tr><td>Refunded</td><td class="r">${money(i.refunded)}</td></tr>` : ''}<tr><td><b>Balance due</b></td><td class="r"><b>${money(bal)}</b></td></tr></table>
     ${pays.length ? `<b>Payments</b><table><tr><th>Receipt</th><th>Date</th><th>Method</th><th>Reference</th><th class="r">Amount</th></tr>${pays.map(x => `<tr><td>${x.id}</td><td>${fdate(x.at)}</td><td>${esc(x.method)}</td><td>${esc(x.ref)}</td><td class="r">${x.type === 'refund' ? '-' : ''}${money(x.amount)}</td></tr>`).join('')}</table>` : ''}
     <p class="sm">Status: <b>${i.status}</b>. ${esc(db.hospital.invoiceNote)} GSTIN: ${esc(db.hospital.gstin)}</p>${docFoot}</div>`,
-    footer:`${bal > 0 && can('bill.pay') ? `<button class="btn p" onclick="A.pay('${id}')">Record payment</button>` : ''}${i.paid - i.refunded > 0 && can('bill.refund') ? `<button class="btn d" onclick="A.refund('${id}')">Refund</button>` : ''}${can('bill.create') && i.visit && !i.paid ? `<button class="btn" onclick="A.genInvoice('${i.visit}')">Sync charges</button>` : ''}<button class="btn n" onclick="window.print()">Print / Save as PDF</button>` });
+    footer:`${can('bill.create') ? `<button class="btn" onclick="A.editBill('${id}')">Edit bill</button>` : ''}${bal > 0 && can('bill.pay') ? `<button class="btn p" onclick="A.pay('${id}')">Record payment</button>` : ''}${i.paid - i.refunded > 0 && can('bill.refund') ? `<button class="btn d" onclick="A.refund('${id}')">Refund</button>` : ''}${can('bill.create') && i.visit && !i.paid ? `<button class="btn" onclick="A.genInvoice('${i.visit}')">Sync charges</button>` : ''}<button class="btn n" onclick="window.print()">Print / Save as PDF</button>` });
 });
 def('pay', id => { need('bill.pay'); const i = byId(db.invoices, id); const bal = balance(i); openModal({ title:'Record payment (simulated)', body:`<div class="note warn" style="margin-bottom:12px">Demo only. No real money moves and no payment gateway is called.</div><p>Balance due on ${id}: <b>${money(bal)}</b></p><div id="pyf" class="form">${field('Amount *', `<input name="amount" type="number" min="1" max="${bal}" step="0.01" value="${bal}">`)}${field('Method *', '<select name="method"><option>Cash</option><option>UPI</option><option>Card</option><option>Bank transfer</option></select>')}</div>`, footer:`<button class="btn" onclick="closeModal();A.invoice('${id}')">Back</button><button class="btn p" onclick="A.savePay('${id}')">Record payment</button>` }); });
 def('savePay', id => { need('bill.pay'); const f = fv('pyf'); const i = byId(db.invoices, id); const amt = Math.round(+f.amount * 100) / 100; const bal = balance(i); if (!(amt > 0)) throw new VErr('Enter an amount.'); if (amt > bal + 0.001) throw new VErr('The amount is more than the balance of ' + money(bal) + '.'); const pm = { id:nextId(db, 'pay'), invoice:id, amount:amt, method:f.method, at:todayStr(), ref:'SIM-' + Math.floor(100000 + Math.random() * 899999), type:'payment' }; db.payments.push(pm); i.paid += amt; refreshInvoice(i); audit('Payment recorded (simulated)', id + ' ' + money(amt) + ' ' + f.method); save(); render(); toast('Receipt ' + pm.id + ': ' + money(amt) + ' via ' + f.method + ' (simulated)', 'ok'); A.invoice(id); });
@@ -3327,13 +3366,96 @@ def('refund', id => { need('bill.refund'); const i = byId(db.invoices, id); cons
 def('saveRefund', id => { need('bill.refund'); const f = fv('rff'); const i = byId(db.invoices, id); const amt = +f.amount; if (!f.why) throw new VErr('Enter a reason for the refund.'); if (!(amt > 0) || amt > i.paid - i.refunded) throw new VErr('Refund must be more than 0 and not more than ' + money(i.paid - i.refunded) + '.'); db.payments.push({ id:nextId(db, 'pay'), invoice:id, amount:amt, method:f.method, at:todayStr(), ref:f.why, type:'refund' }); i.refunded += amt; refreshInvoice(i); audit('Refund recorded', id + ' ' + money(amt)); save(); render(); toast('Refund of ' + money(amt) + ' recorded', 'ok'); A.invoice(id); });
 def('exportDaily', () => { const d = ST.bday || todayStr(); downloadCSV('daily-collection-' + d + '.csv', ['Receipt', 'Invoice/Sale', 'Method', 'Reference', 'Type', 'Amount'], db.payments.filter(p => p.at === d).map(p => [p.id, p.invoice || p.sale, p.method, p.ref, p.type, p.amount])); });
 
+/* ---- manual bills: registered patient or unregistered walk-in, and editing ---- */
+const BILL_CATS = ['Consultation', 'Laboratory', 'Pharmacy', 'Room', 'Nursing', 'Procedure', 'Other'];
+const billName = i => i.patient ? P(i.patient).name : (i.customer || 'Walk-in customer');
+const billParty = i => i.patient ? pLink(i.patient) : `<b>${esc(billName(i))}</b><div class="sm mut">Unregistered${i.customerPhone ? ' | ' + esc(i.customerPhone) : ''}</div>`;
+function billDraftFrom(inv) {
+  return { patient: inv && inv.patient ? inv.patient : '', customer: inv ? (inv.customer || '') : '', customerPhone: inv ? (inv.customerPhone || '') : '', discount: inv ? (inv.discount || 0) : 0, lines: inv ? inv.lines.map(l => ({ desc:l.desc, cat:l.cat, qty:l.qty, price:l.price })) : [] };
+}
+function captureBill() {
+  const f = fv('bfl'); const lines = [];
+  /* keep one entry per visible row (blank ones too) so Remove hits the row you clicked */
+  for (let i = 0; i < (ST.billRows || 3); i++) {
+    lines.push({ desc:(f['d' + i] || '').trim(), cat:f['c' + i] || 'Other', qty:f['q' + i] || 1, price:f['p' + i] || '' });
+  }
+  return { patient:f.patient || '', customer:f.customer || '', customerPhone:f.phone || '', discount:+f.discount || 0, lines };
+}
+function openBillModal(inv) {
+  need('bill.create');
+  const d = ST.billDraft || billDraftFrom(inv);
+  ST.billDraft = d; ST.billEditId = inv ? inv.id : '';
+  const rows = ST.billRows || Math.max(1, d.lines.length) || 3; ST.billRows = rows;
+  const lineRows = [...Array(rows)].map((_, i) => { const l = d.lines[i] || {};
+    return `<div class="form" style="grid-template-columns:2.4fr 1.3fr .7fr 1fr auto;align-items:end">
+      ${field('Description', `<input name="d${i}" value="${esc(l.desc || '')}" placeholder="${i ? 'Optional' : 'e.g. Wound dressing'}">`)}
+      ${field('Category', `<select name="c${i}">${BILL_CATS.map(c => `<option ${(l.cat || 'Consultation') === c ? 'selected' : ''}>${c}</option>`).join('')}</select>`)}
+      ${field('Qty', `<input name="q${i}" type="number" min="1" value="${l.qty || 1}">`)}
+      ${field('Rate (INR)', `<input name="p${i}" type="number" min="0" step="1" value="${l.price == null ? '' : l.price}">`)}
+      <button class="btn s d" type="button" onclick="A.billDel(${i})" title="Remove this charge" aria-label="Remove this charge">Remove</button>
+    </div>`; }).join('');
+  openModal({ title: inv ? 'Edit bill ' + inv.id : 'Generate bill', wide:true, noFocus:true, body:`<div id="bfl" class="grid">
+    ${field('Patient', `<select name="patient"><option value="">Not registered (walk-in or outside patient)</option>${opt(db.patients, p => p.id, p => p.id + '  ' + p.name, d.patient)}</select>`)}
+    <div class="form">${field('Name for an unregistered patient', `<input name="customer" value="${esc(d.customer || '')}" placeholder="Required only when no patient is selected">`)}${field('Phone', `<input name="phone" inputmode="numeric" maxlength="10" value="${esc(d.customerPhone || '')}" placeholder="Optional">`)}</div>
+    <div class="row"><b>Charges</b><span style="flex:1"></span><button class="btn s" onclick="A.billRow()">Add line</button></div>
+    ${lineRows}
+    <div class="form">${field('Discount (INR)', `<input name="discount" type="number" min="0" step="1" value="${d.discount || 0}">`)}</div>
+    <div class="note">${inv ? 'Saving recalculates the total. Payments already recorded are kept.' : 'No payment is taken here. Record it from the bill afterwards. All payments in this demo are simulated.'}</div>
+  </div>`, footer:`<button class="btn" onclick="A.closeBill()">Cancel</button><button class="btn p" onclick="A.saveBill('${inv ? inv.id : ''}')">${inv ? 'Save changes' : 'Generate bill'}</button>` });
+}
+def('newBill', () => { ST.billDraft = null; ST.billRows = 3; ST.billEditId = ''; openBillModal(null); });
+def('editBill', id => { ST.billDraft = null; ST.billRows = 0; openBillModal(byId(db.invoices, id)); });
+def('billRow', () => { ST.billDraft = captureBill(); ST.billRows = Math.min(10, (ST.billRows || 3) + 1); openBillModal(ST.billEditId ? byId(db.invoices, ST.billEditId) : null); });
+def('billDel', i => {
+  const d = captureBill();
+  if (d.lines.length > 1) d.lines.splice(i, 1);
+  else d.lines[i] = { desc:'', cat:'Consultation', qty:1, price:'' }; /* always leave one row to type into */
+  ST.billDraft = d; ST.billRows = Math.max(1, Math.min(10, d.lines.length || 1));
+  openBillModal(ST.billEditId ? byId(db.invoices, ST.billEditId) : null);
+});
+def('closeBill', () => { ST.billDraft = null; ST.billRows = 0; ST.billEditId = ''; closeModal(); });
+def('saveBill', id => {
+  need('bill.create'); const f = fv('bfl');
+  const lines = []; const rows = ST.billRows || 3;
+  for (let i = 0; i < rows; i++) {
+    const desc = (f['d' + i] || '').trim(); if (!desc) continue;
+    const qty = +f['q' + i] || 1, price = +f['p' + i] || 0;
+    if (qty < 1) throw new VErr('Quantity for "' + desc + '" must be at least 1.');
+    if (price < 0) throw new VErr('Rate for "' + desc + '" cannot be negative.');
+    lines.push({ desc, cat:f['c' + i] || 'Other', qty, price });
+  }
+  if (!lines.length) throw new VErr('Add at least one charge with a description.');
+  const customer = (f.customer || '').trim();
+  if (!f.patient) {
+    if (customer.length < 2) throw new VErr('Select a registered patient, or enter the name of the unregistered patient.');
+    if (f.phone && !/^[6-9]\d{9}$/.test(f.phone)) throw new VErr('Enter a valid 10-digit phone number, or leave it blank.');
+  }
+  const total = sum(lines, l => l.qty * l.price);
+  const discount = Math.round((+f.discount || 0) * 100) / 100;
+  if (discount < 0) throw new VErr('The discount cannot be negative.');
+  if (discount > total) throw new VErr('The discount cannot be more than the charges of ' + money(total) + '.');
+  const inv = id ? byId(db.invoices, id) : null;
+  if (inv) {
+    if (total - discount < inv.paid - inv.refunded) throw new VErr('The new total of ' + money(total - discount) + ' is less than the ' + money(inv.paid - inv.refunded) + ' already collected. Record a refund first.');
+    inv.patient = f.patient || null; inv.customer = f.patient ? '' : customer; inv.customerPhone = f.patient ? '' : (f.phone || '');
+    inv.lines = lines; inv.total = total; inv.discount = discount; refreshInvoice(inv);
+    audit('Bill edited', inv.id + ' ' + money(net(inv))); ST.billDraft = null; ST.billRows = 0; ST.billEditId = '';
+    save(); closeModal(); render(); toast('Bill ' + inv.id + ' updated: ' + money(net(inv)), 'ok'); A.invoice(inv.id); return;
+  }
+  const created = { id:nextId(db, 'bill'), patient:f.patient || null, customer:f.patient ? '' : customer, customerPhone:f.patient ? '' : (f.phone || ''), visit:null, admission:null, date:todayStr(), lines, discount, total, paid:0, refunded:0, status:'Pending', createdBy:session.name };
+  db.invoices.push(created); refreshInvoice(created);
+  audit('Bill generated manually', created.id + ' ' + billName(created) + ' ' + money(net(created)));
+  ST.billDraft = null; ST.billRows = 0; ST.billEditId = '';
+  save(); closeModal(); render(); toast('Bill ' + created.id + ' generated: ' + money(net(created)), 'ok'); A.invoice(created.id);
+});
+
 /* ---------------- reports ---------------- */
 const REPORTS = {
   appts:{ t:'Patients and appointments', b:() => ({ cols:['Appointment', 'Date', 'Patient ID', 'Patient', 'Doctor', 'Department', 'Type', 'Status'], rows:db.appointments.slice().sort((a, b) => b.date.localeCompare(a.date)).map(a => [a.id, a.date, a.patient, P(a.patient).name, DOC(a.doctor).name, deptName(DOC(a.doctor).dept), a.type, a.status]) }) },
   adm:{ t:'Admissions and discharges', b:() => ({ cols:['Admission', 'Patient ID', 'Patient', 'Doctor', 'Bed', 'Admitted', 'Discharged', 'Status'], rows:db.admissions.map(a => [a.id, a.patient, P(a.patient).name, DOC(a.doctor).name, bedName(a.bed), a.admittedAt, a.dischargedAt || '', a.status]) }) },
   occ:{ t:'Bed occupancy', b:() => ({ cols:['Ward', 'Total beds', 'Occupied', 'Available', 'Maintenance', 'Occupancy %'], rows:db.wards.map(w => { const bs = db.beds.filter(b => b.ward === w.id); const o = bs.filter(b => b.status === 'occupied').length; return [w.name, bs.length, o, bs.filter(b => b.status === 'free').length, bs.filter(b => b.status === 'maintenance').length, Math.round(100 * o / bs.length)]; }) }) },
   rev:{ t:'Revenue and collections', b:() => ({ cols:['Date', 'Receipts', 'Collected (INR)'], rows:[...Array(14)].map((_, i) => addDays(i - 13)).map(d => [d, db.payments.filter(p => p.at === d).length, collectionsOn(d)]) }) },
-  out:{ t:'Outstanding bills', b:() => ({ cols:['Invoice', 'Date', 'Patient ID', 'Patient', 'Net (INR)', 'Paid (INR)', 'Balance (INR)', 'Status'], rows:db.invoices.filter(i => balance(i) > 0).map(i => [i.id, i.date, i.patient, P(i.patient).name, net(i), i.paid - i.refunded, balance(i), i.status]) }) },
+  out:{ t:'Outstanding bills', b:() => ({ cols:['Invoice', 'Date', 'Patient ID', 'Patient', 'Net (INR)', 'Paid (INR)', 'Balance (INR)', 'Status'], rows:db.invoices.filter(i => balance(i) > 0).map(i => [i.id, i.date, i.patient || 'Unregistered', billName(i), net(i), i.paid - i.refunded, balance(i), i.status]) }) },
   ph:{ t:'Pharmacy stock and expiry', b:() => ({ cols:['Medicine', 'Batch', 'Expiry', 'Qty', 'Status'], rows:db.batches.slice().sort((a, b) => a.expiry.localeCompare(b.expiry)).map(b => { const m = byId(db.medicines, b.med); return [m.name, b.batchNo, b.expiry, b.qty, b.expiry < todayStr() ? 'Expired' : b.expiry <= addDays(60) ? 'Expiring' : medStock(m.id) <= m.reorder ? 'Low stock' : 'OK']; }) }) },
   lab:{ t:'Laboratory order status', b:() => ({ cols:['Order', 'Date', 'Patient ID', 'Patient', 'Tests', 'Status'], rows:db.labOrders.map(l => [l.id, l.date, l.patient, P(l.patient).name, l.tests.map(t => t.name).join('; '), l.status]) }) },
 };

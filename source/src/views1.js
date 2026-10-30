@@ -221,9 +221,47 @@ VIEWS.staff = () => {
   if (tab === 'doctors') body = table(['Doctor', 'Department', 'Qualification', 'Fee', 'Days / hours', 'Room', 'Staff ID'], db.doctors.map(d => [`<b>${esc(d.name)}</b>`, esc(deptName(d.dept)), esc(d.qual), money(d.fee), esc(d.days) + '<div class="sm mut">' + d.slots + '</div>', esc(d.room), `<span class="mono">${d.staffId}</span>`]));
   else if (tab === 'staff') body = table(['Staff ID', 'Name', 'Role', 'Department', 'Shift', 'Phone'], db.staff.map(s => [`<span class="mono">${s.id}</span>`, esc(s.name), esc(ROLES[s.role].label), esc(s.dept), esc(s.shift), esc(s.phone)]));
   else body = table(['Staff', 'Shift', ...days], db.staff.filter(s => s.role !== 'doctor').map((s, i) => [esc(s.name) + '<div class="sm mut">' + esc(ROLES[s.role].short) + '</div>', esc(s.shift), ...days.map((d, k) => (k + i) % 7 === 6 ? '<span class="mut">Off</span>' : `<span class="badge ${s.shift === 'Night' ? 'info' : 'teal'}">${s.shift[0]}</span>`)]));
-  return `<div class="head"><div><h1>Doctors and staff</h1><p>${db.doctors.length} doctors, ${db.staff.length - db.doctors.length} staff members</p></div><button class="btn p" onclick="A.newStaff()">Add staff member</button></div>
+  return `<div class="head"><div><h1>Doctors and staff</h1><p>${db.doctors.length} doctors, ${db.staff.length - db.doctors.length} staff members</p></div>
+  <div class="row">${can('staff.manage') ? `${tab === 'doctors' ? `<button class="btn p" onclick="A.newDoctor()">Add doctor</button>` : ''}<button class="btn ${tab === 'doctors' ? '' : 'p'}" onclick="A.newStaff()">Add staff member</button>` : ''}</div></div>
   ${tabs([['doctors', 'Doctors'], ['staff', 'All staff'], ['roster', 'Duty roster']], tab, 'A.stab')}<div class="card">${body}</div>`;
 };
 def('stab', t => { ST.stab = t; render(); });
-def('newStaff', () => { need('staff.manage'); openModal({ title:'Add staff member', body:`<div id="sf" class="form">${field('Full name *', '<input name="name">')}${field('Role *', `<select name="role">${Object.keys(ROLES).filter(r => r !== 'doctor').map(r => `<option value="${r}">${ROLES[r].label}</option>`).join('')}</select>`)}${field('Department', '<input name="dept">')}${field('Shift', '<select name="shift"><option>Day</option><option>Evening</option><option>Night</option></select>')}${field('Phone', '<input name="phone">')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveStaff()">Add staff member</button>` }); });
+def('newStaff', () => { need('staff.manage'); openModal({ title:'Add staff member', body:`<div class="note" style="margin-bottom:12px">To add a doctor, use <b>Add doctor</b> so they get a schedule, consultation fee and room.</div><div id="sf" class="form">${field('Full name *', '<input name="name">')}${field('Role *', `<select name="role">${Object.keys(ROLES).filter(r => r !== 'doctor').map(r => `<option value="${r}">${ROLES[r].label}</option>`).join('')}</select>`)}${field('Department', '<input name="dept">')}${field('Shift', '<select name="shift"><option>Day</option><option>Evening</option><option>Night</option></select>')}${field('Phone', '<input name="phone">')}</div>`, footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveStaff()">Add staff member</button>` }); });
 def('saveStaff', () => { need('staff.manage'); const f = fv('sf'); if (f.name.length < 3) throw new VErr('Enter the staff member\'s name.'); const s = { id:nextId(db, 'staff'), name:f.name, role:f.role, dept:f.dept || '-', shift:f.shift, phone:f.phone || '-', active:true }; db.staff.push(s); audit('Staff added', s.id); closeModal(); commit('Added ' + s.name + ' as ' + s.id); });
+
+/* doctors are a separate list (schedule, fee, room) and also get a staff row */
+function nextDoctorId() {
+  db.seq.doctor = (db.seq.doctor || 0) + 1;
+  let id = 'D' + db.seq.doctor;
+  while (db.doctors.some(d => d.id === id)) { db.seq.doctor++; id = 'D' + db.seq.doctor; }
+  return id;
+}
+def('newDoctor', () => {
+  need('staff.manage');
+  const room = 'OPD-' + (101 + db.doctors.length);
+  openModal({ title:'Add doctor', wide:true, body:`<div id="docf" class="form">
+    ${field('Full name *', '<input name="name" placeholder="Dr. First Last">')}
+    ${field('Department *', `<select name="dept">${opt(db.departments, d => d.id, d => d.name)}</select>`)}
+    ${field('Qualification *', '<input name="qual" placeholder="e.g. MBBS, MD">')}
+    ${field('Consultation fee (INR) *', '<input name="fee" type="number" min="1" step="50" value="500">')}
+    ${field('OPD days *', `<select name="days">${['Mon-Sat', 'Mon-Fri', 'Tue-Sun', 'All days'].map(x => `<option>${x}</option>`).join('')}</select>`)}
+    ${field('Consultation hours *', '<input name="slots" value="09:00-14:00" placeholder="09:00-14:00">')}
+    ${field('Room', `<input name="room" value="${esc(room)}">`)}
+    ${field('Phone', '<input name="phone" inputmode="numeric" maxlength="10" placeholder="Optional">')}
+  </div><div class="note" style="margin-top:12px">Adding a doctor also creates their staff record, so they appear in the staff list and duty roster, and can be booked in Appointments.</div>`,
+    footer:`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn p" onclick="A.saveDoctor()">Add doctor</button>` });
+});
+def('saveDoctor', () => {
+  need('staff.manage'); const f = fv('docf');
+  if (f.name.length < 4) throw new VErr('Enter the doctor\'s full name.');
+  if (!f.qual) throw new VErr('Enter the qualification.');
+  if (!(+f.fee > 0)) throw new VErr('Enter a consultation fee greater than 0.');
+  if (!/^\d{1,2}:\d{2}-\d{1,2}:\d{2}$/.test(f.slots)) throw new VErr('Enter consultation hours like 09:00-14:00.');
+  if (f.phone && !/^[6-9]\d{9}$/.test(f.phone)) throw new VErr('Enter a valid 10-digit mobile number, or leave it blank.');
+  if (db.doctors.some(d => d.name.toLowerCase() === f.name.toLowerCase())) throw new VErr('A doctor with this name is already on the list.');
+  const staffId = nextId(db, 'staff');
+  const d = { id:nextDoctorId(), staffId, name:f.name, dept:f.dept, qual:f.qual, fee:+f.fee, days:f.days, slots:f.slots, room:f.room || 'OPD-' + (101 + db.doctors.length), active:true };
+  db.doctors.push(d);
+  db.staff.push({ id:staffId, name:d.name, role:'doctor', dept:deptName(d.dept), shift:'OPD', phone:f.phone || '-', active:true });
+  audit('Doctor added', d.id + ' ' + d.name); closeModal(); ST.stab = 'doctors'; commit(d.name + ' added as ' + d.id + ' (' + deptName(d.dept) + ')');
+});
